@@ -4,17 +4,86 @@
 * I advice teaching yourself this not just use this and create something learn how todo it then use this.
 */
 
+
 enum HitTypeEnum {
     MISS,
     HIT,
     SPRITE
 }
 
+//% blockNamespace="HitResult"
+enum HitResultTileMapInfo {
+    //% block="Column"
+    Column,
+    //% block="Row"
+    Row,
+    //% block="X"
+    X,
+    //% block="Y"
+    Y,
+    //% block="HitType"
+    HitType,
+    //% block="hitSprite"
+    HitSprite
+}
+
+
+/**
+ * Hit result class to breakdown and provide information on the raycast hit.
+ * @param hitColumn The destination column.
+ * @param hitRow The destination row.
+ * @param hitType The hit detials using enum representation. Of hit or miss.
+ */
+class HitResultTileMap {
+    private hitColumn: number;
+    private hitRow: number;
+    private hitType: HitTypeEnum;
+    private hitSprite: Sprite;
+
+    constructor(hitColumn: number, hitRow: number, hitType: HitTypeEnum, hitSprite: Sprite=null) {
+        this.hitColumn = hitColumn;
+        this.hitRow = hitRow;
+        this.hitType = hitType;
+        this.hitSprite = hitSprite
+    }
+
+    public getLocation(): tiles.Location {
+        return tiles.getTileLocation(this.hitColumn, this.hitRow)
+    }
+
+    public getHitResult(): HitTypeEnum {
+        return this.hitType
+    }
+
+    public getColumn(): number {
+        return this.hitColumn
+    } 
+
+    public getRow(): number {
+        return this.hitRow
+    }
+
+    public getHitResultString(): string {
+        switch(this.hitType) {
+            case HitTypeEnum.HIT:
+                return "Hit";
+            case HitTypeEnum.SPRITE:
+                return "Sprite";
+            default:
+                return "Miss"
+        }
+    }
+
+    public getHitSprite(): Sprite {
+        return this.hitSprite
+    }
+}
+
 /**
  * Custom blocks
  */
 //% weight=100 color=#990099 icon=""
-namespace MathLib {
+namespace PixelUtilsKit {
     /**
      * Calculates the distance between to two points.
      * @param posX The X position of the measure from.
@@ -34,7 +103,7 @@ namespace MathLib {
      * Returns the value of pi.
      */
     //% block
-    //% blockID="PI" block="PI π"
+    //% blockID="PI" block="π"
     export function PI(): number {
         return Math.PI
     }
@@ -92,7 +161,7 @@ namespace MathLib {
       * @param speed The speed you wish to head the direction at.
      */
     //% block
-    //% blockId="calcVelocity" block="CalcVelocity Angle:$angle, Speed:$speed"
+    //% blockId="calcVelocity" block="CalcVelocity Angle:$angle Speed:$speed"
     export function calcVelocity(angle: number, speed: number): Array<number> {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
@@ -121,8 +190,9 @@ namespace MathLib {
      * @param speed The speed you wish to head the direction at.
      */
     //% block
-    //% blockId="tileMapRaycast" block="TileRaycast Column:$col Row:$row Angle:$angle Distance:$distance"
-    export function tileMapRaycast(col: number, row: number, angle: number, distance: number): HitResultTileMap {
+    //% blockId="tileMapRaycast" block="TileRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind"
+    //% kind.shadow="spritekind"
+    export function tileMapRaycast(col: number, row: number, angle: number, distance: number, kind: number): HitResultTileMap {
         //TODO in the future add a check to see if a tileMap is active or not.
         let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
         let currentX = col;
@@ -136,43 +206,47 @@ namespace MathLib {
             currentY = Math.floor(currentY + (1 * tempSin));
             step++;
             if(iterCount >= 65033) {
-                console.log("Warning raycast reached iteration limit. This could effect performance.")
+                console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
 
             if(tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
-                return new HitResultTileMap(currentX, currentY, HitTypeEnum.HIT)
+                return new HitResultTileMap(currentX, currentY, HitTypeEnum.HIT);
+            } else {
+                let spriteArray = sprites.allOfKind(kind);
+                for (let x = 0; x != spriteArray.length; x++) {
+                    let sprite = spriteArray[x];
+                    let location = sprite.tilemapLocation();
+                    if (location.column == currentX && location.row == currentY) {
+                        return new HitResultTileMap(currentX, currentY, HitTypeEnum.SPRITE, sprite);
+                    }
+                }
             }
         }
-        return new HitResultTileMap(currentX, currentY, HitTypeEnum.MISS)
+        return new HitResultTileMap(currentX, currentY, HitTypeEnum.MISS);
     }
+
 
     /**
-     * Hit result class to breakdown and provide information on the raycast hit.
-     * @param hitColumn The destination column.
-     * @param hitRow The destination row.
-     * @param hitType The hit detials using enum representation. Of hit or miss.
-     */
-    class HitResultTileMap {
-        private hitColumn: number;
-        private hitRow: number;
-        private hitType: HitTypeEnum;
-
-        constructor(hitColumn: number, hitRow: number, hitType: HitTypeEnum) {
-            this.hitColumn = hitColumn;
-            this.hitRow = hitRow;
-            this.hitType = hitType;
+    * Returns hit result information from a raycast.
+    * @param resultValue The hit result variable.
+    * @param getType The value you wish to retrieve from the result.
+    */
+    //% block
+    //% blockId="getHitResultTileMap" block="RaycastHitResultTileMap Value:$resultValue result:$getType"
+    export function getHitResultTileMap(resultValue: HitResultTileMap, getType: HitResultTileMapInfo): any {
+        switch(getType) {
+            case HitResultTileMapInfo.Column:
+                return resultValue.getLocation().column;
+            case HitResultTileMapInfo.Row:
+                return resultValue.getLocation().row;
+            case HitResultTileMapInfo.X:
+                return resultValue.getLocation().x;
+            case HitResultTileMapInfo.Y:
+                return resultValue.getLocation().y;
+            case HitResultTileMapInfo.HitType:
+                return resultValue.getHitResultString();
+            case HitResultTileMapInfo.HitSprite:
+                return resultValue.getHitSprite();
         }
-
-        //% block="Get hit location"
-        getLocation(): tiles.Location {
-            return tiles.getTileLocation(this.hitColumn, this.hitRow)
-        }
-
-        //% block="Get hit type"
-        getHitResult(): HitTypeEnum {
-            return this.hitType
-        }
-
     }
-
 }
