@@ -1,7 +1,7 @@
  
 
 
-> Open this page at [https://thereal3rd.github.io/utilityfunctionslib/](https://thereal3rd.github.io/utilityfunctionslib/)
+> Open this page at [https://thereal3rd.github.io/utilityfunctionslib/](https://thereal3rd.github.io/pixelutilsarcade/)
 
 ## Use as Extension
 
