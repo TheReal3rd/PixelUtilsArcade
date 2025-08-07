@@ -181,7 +181,7 @@ function testRaycast() {
         mySprite.x,
         mySprite.y
     )
-    console.log(angleTo)
+    //console.log(angleTo)
     resultTest = PixelUtils.tileMapRaycast(
         7,
         7,
