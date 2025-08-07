@@ -83,7 +83,7 @@ class HitResultTileMap {
  * Custom blocks
  */
 //% weight=100 color=#990099 icon=""
-namespace PixelUtilsKit {
+namespace PixelUtils {
     /**
      * Calculates the distance between to two points.
      * @param posX The X position of the measure from.
