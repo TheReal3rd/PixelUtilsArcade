@@ -18,7 +18,7 @@ To edit this repository in MakeCode.
 
 * open [https://arcade.makecode.com/](https://arcade.makecode.com/)
 * click on **Import** then click on **Import URL**
-* paste **https://github.com/thereal3rd/utilityfunctionslib** and click import
+* paste **https://github.com/thereal3rd/pixelutilsarcade** and click import
 
 #### Metadata (used for search, rendering)
 
