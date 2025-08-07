@@ -2,15 +2,15 @@
 Simple extension that provides math and other utility functions for arcade makecode alongside exposing useful commands to blocks.
 
 ### Whats implemented:
-* PI - Allows you to retrieve value of pi withou manually typing it in.
-* Distance Calculator -  Allows you to calculate the distance between two positions.
-* Angle Calculator - Allows you to calculate the angle between to positions.
-* Radians - Convert a given angle to radians.
-* Degrees - Convert the given radians back into degrees.
-* Clamp - Limit a value within a range.
-* RaycastTileMap - Raycast within a direction to retreive tile map data such as a wall and sprite is within the area.
-* Velocity - Calcuates the given velocity for a position with the provided speed and angle.
-* Angle Position - Returns the new position from the given angle, distance and position that is provided.  
+* **PI** – Allows you to retrieve the value of pi without manually typing it in.
+* **Distance Calculator** – Allows you to calculate the distance between two positions.
+* **Angle Calculator** – Allows you to calculate the angle between two positions.
+* **Radians** – Converts a given angle to radians.
+* **Degrees** – Converts the given radians back into degrees.
+* **Clamp** – Limits a value within a specified range.
+* **RaycastTileMap** – Raycasts in a direction to retrieve tile map data, such as whether a wall or sprite is within the area.
+* **Velocity** – Calculates the velocity for a position using the provided speed and angle.
+* **Angle Position** – Returns the new position based on a given angle, distance, and starting position.
 
 So now i don't have to keep writing all these commands manually each time lol.
 
