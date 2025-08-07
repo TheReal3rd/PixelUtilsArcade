@@ -40,7 +40,7 @@ class HitResultTileMap {
     private hitType: HitTypeEnum;
     private hitSprite: Sprite;
 
-    constructor(hitColumn: number, hitRow: number, hitType: HitTypeEnum, hitSprite: Sprite=null) {
+    constructor(hitColumn: number, hitRow: number, hitType: HitTypeEnum, hitSprite: Sprite = null) {
         this.hitColumn = hitColumn;
         this.hitRow = hitRow;
         this.hitType = hitType;
@@ -57,14 +57,14 @@ class HitResultTileMap {
 
     public getColumn(): number {
         return this.hitColumn
-    } 
+    }
 
     public getRow(): number {
         return this.hitRow
     }
 
     public getHitResultString(): string {
-        switch(this.hitType) {
+        switch (this.hitType) {
             case HitTypeEnum.HIT:
                 return "Hit";
             case HitTypeEnum.SPRITE:
@@ -117,7 +117,7 @@ namespace PixelUtils {
     //% block
     //% blockId="clamp" block="Clamp Value:$value Min:$minValue Max:$maxValue"
     export function clamp(value: number, minValue: number, maxValue: number): number {
-        return Math.min(Math.max(value, maxValue), minValue)
+        return Math.max(Math.min(value, maxValue), minValue)
     }
 
     /**
@@ -150,8 +150,8 @@ namespace PixelUtils {
     //% block
     //% blockId="calcAngle" block="CalcAngle from X:$posX Y:$posY to X:$posX1 Y:$posY1"
     export function calcAngle(posX: number, posY: number, posX1: number, posY1: number): number {
-        let xDiff = posX - posX1;
-        let yDiff = posY - posY1;
+        let xDiff = posX1 - posX;
+        let yDiff = posY1 - posY;
         return toDegrees(Math.atan2(yDiff, xDiff))
     }
 
@@ -180,7 +180,7 @@ namespace PixelUtils {
     export function calcAngularPosition(posX: number, posY: number, angle: number, distance: number): Array<number> {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
-        return [ posX + (distance * cos), posY + (distance * sin)]
+        return [posX + (distance * cos), posY + (distance * sin)]
     }
 
     /**
@@ -205,11 +205,11 @@ namespace PixelUtils {
             currentX = Math.floor((currentX + (1 * tempCos)));
             currentY = Math.floor(currentY + (1 * tempSin));
             step++;
-            if(iterCount >= 65033) {
+            if (iterCount >= 65033) {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
 
-            if(tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
+            if (tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
                 return new HitResultTileMap(currentX, currentY, HitTypeEnum.HIT);
             } else {
                 let spriteArray = sprites.allOfKind(kind);
@@ -234,7 +234,7 @@ namespace PixelUtils {
     //% block
     //% blockId="getHitResultTileMap" block="RaycastHitResultTileMap Value:$resultValue result:$getType"
     export function getHitResultTileMap(resultValue: HitResultTileMap, getType: HitResultTileMapInfo): any {
-        switch(getType) {
+        switch (getType) {
             case HitResultTileMapInfo.Column:
                 return resultValue.getLocation().column;
             case HitResultTileMapInfo.Row:
