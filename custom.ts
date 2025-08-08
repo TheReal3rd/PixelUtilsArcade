@@ -23,7 +23,7 @@ enum HitResultTileMapInfo {
     Y,
     //% block="HitType"
     HitType,
-    //% block="hitSprite"
+    //% block="HitSprite"
     HitSprite
 }
 
@@ -181,6 +181,24 @@ namespace PixelUtils {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
         return [posX + (distance * cos), posY + (distance * sin)]
+    }
+
+    /**
+     * Show device stats.
+     */
+    //% block
+    //% blockId="showStats" block="Show Stats"
+    export function showStats(): void {
+        game.stats = true
+    }
+
+    /**
+     * Show device debug.
+     */
+    //% block
+    //% blockId="showDebug" block="Show Debug"
+    export function showDebug(): void {
+        game.debug = true
     }
 
     /**
