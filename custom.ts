@@ -202,6 +202,40 @@ namespace PixelUtils {
     }
 
     /**
+     * Fires a Sprite Laser towards an angle. Intended to create lasers within games.
+     * @param posX X position to laser from.
+     * @param posX Y position to laser from.
+     * @param angle Laser direction of travel.
+     * @param distance The maximum distance the laser will be shot towards.
+     */
+    //% block
+    //% blockId="laserProjectile" block="ShootLaser from: X:$posX Y:$posY Angle:$angle Distance:$distance SpriteImage:$spriteImage Kind:$kind"
+    //% kind.shadow="spritekind"
+    export function laserProjectile(posX: number, posY: number, angle: number, distance: number, spriteImage: Image, spriteKind: number): void {
+        let iterCount = 0;// To prevent runaway code. distance + 10.
+        let currentX = posX;
+        let currentY = posY;
+        let step = 0;
+        let tempSin = Math.sin(toRadians(angle));
+        let tempCos = Math.cos(toRadians(angle));
+        let image = spriteImage
+        let stepSize = Math.min(image.width, image.height)
+
+        while (step < distance && iterCount < distance + 10) {
+            iterCount++;
+            currentX = currentX + (stepSize * tempCos);
+            currentY = currentY + (stepSize * tempSin);
+            step+=stepSize;
+            if (iterCount >= distance + 10) {
+                console.log("Warning raycast reached iteration limit. This could effect performance.");
+            }
+            
+            let tempProjectile = sprites.create(spriteImage, spriteKind)
+            tempProjectile.setPosition(currentX, currentY)
+        }
+    }
+
+    /**
      * TileMap Raycast returns results on information of what was hit.
      * @param tileLocation TileMap location to raycast from.
      * @param angle The angle the raycast will be sent towards.
@@ -218,7 +252,7 @@ namespace PixelUtils {
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
-        while (step < distance && iterCount < 65035) {
+        while (step < distance && iterCount < 65033) {
             iterCount++;
             currentX = Math.floor((currentX + (1 * tempCos)));
             currentY = Math.floor(currentY + (1 * tempSin));
@@ -267,4 +301,5 @@ namespace PixelUtils {
                 return resultValue.getHitSprite();
         }
     }
+
 }
