@@ -13,7 +13,7 @@ Simple extension that provides math and other utility functions for arcade makec
 * **Angle Position** – Returns the new position based on a given angle, distance, and starting position.
 * **Show Stats** – Makes helpful stats be avaible when using blocks.
 * **Show Debug** – Makes the debug view that shows hitboxes and more avaible when using blocks.
-* **ShootLaser** – Creates a line of sprites towards an angle intended to be used as a laser.
+* **Shoot Laser** – Creates a line of sprites towards an angle intended to be used as a laser.
 
 So now i don't have to keep writing all these commands manually each time lol.
 

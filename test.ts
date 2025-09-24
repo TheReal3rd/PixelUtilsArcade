@@ -132,7 +132,8 @@ function testRaycast() {
     scene.cameraFollowSprite(mySprite)
     let tempPos = tiles.getTileLocation(7, 7)
     mySprite.setPosition(tempPos.x, tempPos.y)
-    PixelUtils.laserProjectile(tempPos.x, tempPos.y, 0, 100, img`
+ 
+    PixelUtils.laserProjectile(tempPos.x, tempPos.y, 0, 100, sprites.create(img`
     e e e . . . . e e e . . . . 
     c d d c . . c d d c . . . . 
     c b d d f f d d b c . . . . 
@@ -147,7 +148,7 @@ function testRaycast() {
     . f d d d d d b d d f f f . 
     . f d f f f d f f d f . . . 
     . f f . . f f . . f f . . . 
-`, SpriteKind.Food)
+`, SpriteKind.Food))
     let mySprite2 = sprites.create(img`
     e e e . . . . e e e . . . . 
     c d d c . . c d d c . . . . 

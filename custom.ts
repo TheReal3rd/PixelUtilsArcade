@@ -209,16 +209,17 @@ namespace PixelUtils {
      * @param distance The maximum distance the laser will be shot towards.
      */
     //% block
-    //% blockId="laserProjectile" block="ShootLaser from: X:$posX Y:$posY Angle:$angle Distance:$distance SpriteImage:$spriteImage Kind:$kind"
+    //% blockId="laserProjectile" block="ShootLaser from: X:$posX Y:$posY Angle:$angle Distance:$distance Sprite:$sprite"
     //% kind.shadow="spritekind"
-    export function laserProjectile(posX: number, posY: number, angle: number, distance: number, spriteImage: Image, spriteKind: number): void {
+    export function laserProjectile(posX: number, posY: number, angle: number, distance: number, sprite: Sprite): void {
         let iterCount = 0;// To prevent runaway code. distance + 10.
         let currentX = posX;
         let currentY = posY;
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
-        let image = spriteImage
+        sprites.destroy(sprite)
+        let image = sprite.image
         let stepSize = Math.min(image.width, image.height)
 
         while (step < distance && iterCount < distance + 10) {
@@ -230,7 +231,7 @@ namespace PixelUtils {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
             
-            let tempProjectile = sprites.create(spriteImage, spriteKind)
+            let tempProjectile = sprites.create(sprite.image, sprite.kind())
             tempProjectile.setPosition(currentX, currentY)
         }
     }
