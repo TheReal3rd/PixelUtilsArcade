@@ -4,6 +4,12 @@
 * I advice teaching yourself this not just use this and create something learn how todo it then use this.
 */
 
+let directions = [
+    [0,1],
+    [0,-1],
+    [1,0],
+    [-1.0]
+]
 
 enum HitTypeEnum {
     MISS,
@@ -25,6 +31,33 @@ enum HitResultTileMapInfo {
     HitType,
     //% block="HitSprite"
     HitSprite
+}
+
+/**
+ * Node Object to store scoring, postion and parent information.
+ * @param Position tile.
+ * @param Parent tile.
+ */
+class Node {
+    private position: tiles.Location;
+    private parent : tiles.Location;
+
+    public gScore: number;
+    public hScore: number;
+    public fScore: number;
+
+    constructor(position: tiles.Location, parent: tiles.Location) {
+        this.position = position;
+        this.parent = parent;
+    }
+
+    public getPosition() {
+        return this.position;
+    }
+
+    public getParent() {
+        return this.parent;
+    }
 }
 
 
@@ -302,5 +335,30 @@ namespace PixelUtils {
                 return resultValue.getHitSprite();
         }
     }
+    //https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
+    export function calcPathfindTileMap(fromPosition: tiles.Location, toPosition: tiles.Location, minDistance: number) : any {
+        let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
+        let currentX = fromPosition.column;
+        let currentY = fromPosition.row;
+        let step = 0;
+        
+        let clearTiles = [];
+        let obstructedTiles = [];
+        
+        let finished = false;
+        while (!finished || iterCount >= 1000) {
+            iterCount++;
+            let stepX = currentX;
+            let stepY = currentY;
+            for(let dirIndex = 0; dirIndex != directions.length - 1; dirIndex++ ) {
+                stepX += directions[dirIndex][0];
+                stepY += directions[dirIndex][1];
+
+                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
+
+                }
+            }
+        }
+    } 
 
 }
