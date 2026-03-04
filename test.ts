@@ -209,11 +209,18 @@ function testRaycast() {
     console.logValue("(Wall Angled -> Hit) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
 }
 
+function testPathFinding() {
+    //console.log("Path Finding started...")
+    //let result = PixelUtils.calcPathfindTileMap(tiles.getTileLocation(1,1), tiles.getTileLocation(1, 10), 20)
+    //console.log(result)
+}
+
 testDistance()
 testAngle()
 testConverters()
 testVelocity()
 testRaycast()
+testPathFinding()
 
 //PixelUtils.showStats()
 //PixelUtils.showDebug()

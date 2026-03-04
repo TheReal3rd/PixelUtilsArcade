@@ -39,14 +39,14 @@ enum HitResultTileMapInfo {
  * @param Parent tile.
  */
 class Node {
-    private position: tiles.Location;
-    private parent : tiles.Location;
+    private position: Array<any>;
+    private parent : Node;
 
     public gScore: number;
     public hScore: number;
     public fScore: number;
 
-    constructor(position: tiles.Location, parent: tiles.Location) {
+    constructor(position: Array<any>, parent: Node) {
         this.position = position;
         this.parent = parent;
     }
@@ -209,7 +209,7 @@ namespace PixelUtils {
      * @param distance The how far the position will be from the current given position.
      */
     //% block
-    //% blockId="calcAngularPosition" block="CalcAngularPosition PosX:$posX posY:$PosY Angle:$angle Distance:$distance"
+    //% blockId="calcAngularPosition" block="CalcAngularPosition PosX:$posX PosY:$posY Angle:$angle Distance:$distance"
     export function calcAngularPosition(posX: number, posY: number, angle: number, distance: number): Array<number> {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
@@ -286,18 +286,21 @@ namespace PixelUtils {
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
-        while (step < distance && iterCount < 65033) {
+        let iterLimit = 65033;
+        while (step < distance && iterCount < iterLimit) {
             iterCount++;
             currentX = Math.floor((currentX + (1 * tempCos)));
             currentY = Math.floor(currentY + (1 * tempSin));
             step++;
-            if (iterCount >= 65033) {
+            if (iterCount >= iterLimit) {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
 
             if (tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
                 return new HitResultTileMap(currentX, currentY, HitTypeEnum.HIT);
             } else {
+                if (kind == -1)  continue // Incase people don't need to check for entities.
+
                 let spriteArray = sprites.allOfKind(kind);
                 for (let x = 0; x != spriteArray.length; x++) {
                     let sprite = spriteArray[x];
@@ -335,30 +338,40 @@ namespace PixelUtils {
                 return resultValue.getHitSprite();
         }
     }
-    //https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
-    export function calcPathfindTileMap(fromPosition: tiles.Location, toPosition: tiles.Location, minDistance: number) : any {
-        let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
-        let currentX = fromPosition.column;
+
+    //TODO
+    //Basic Pathdfinding.
+    export function BasicPathfindTileMap(
+        fromPosition: tiles.Location,
+        toPosition: tiles.Location,
+        minDistance: number,
+        scanMaxArea: number = 5,
+        maxScanBranches: number = 4,
+    ): number[][] {
+
+        let currentX = fromPosition.col;
         let currentY = fromPosition.row;
-        let step = 0;
-        
-        let clearTiles = [];
-        let obstructedTiles = [];
-        
-        let finished = false;
-        while (!finished || iterCount >= 1000) {
-            iterCount++;
-            let stepX = currentX;
-            let stepY = currentY;
-            for(let dirIndex = 0; dirIndex != directions.length - 1; dirIndex++ ) {
-                stepX += directions[dirIndex][0];
-                stepY += directions[dirIndex][1];
 
-                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
+        let resultPathNodes: number [][] = [[currentX, currentY]];
 
-                }
+        for(let x = -scanMaxArea; x != scanMaxArea; x++) {
+            for (let y = -scanMaxArea; y != scanMaxArea; y++) {
+                let stepX = currentX + x;
+                let stepY = currentY + y;
+                
+                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepX, stepY))) continue;
+                
+                let angleToTile = calcAngle(currentX, currentY, stepX, stepY);
+                let distanceToTile = calcDistance(currentX, currentY, stepX, stepY);
+                let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
+
+                //if ()
             }
         }
-    } 
+
+    
+        return [];
+    }
+       
 
 }
