@@ -215,12 +215,26 @@ function testPathFinding() {
     //console.log(result)
 }
 
-testDistance()
-testAngle()
-testConverters()
-testVelocity()
-testRaycast()
-testPathFinding()
+function testPallet() {
+    console.log("Colour Pallet Test started...");
+    for (let i = 0; i != 16; i++) {
+        pause(300);
+        PixelUtils.setColourIndex(i, 255, 0, 0);
+    }
+    console.log("Everything should be red.");
+    pause(1000);
+    console.log("Reset. Everything should be normal colours.")
+    PixelUtils.resetColourPallet();
+}
 
-//PixelUtils.showStats()
+PixelUtils.showStats()
+testDistance();
+testAngle();
+testConverters();
+testVelocity();
+testRaycast();
+testPathFinding();
+testPallet();
+//
 //PixelUtils.showDebug()
+

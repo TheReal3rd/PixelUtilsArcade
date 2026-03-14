@@ -4,6 +4,46 @@
 * I advice teaching yourself this not just use this and create something learn how todo it then use this.
 */
 
+//For resetting.
+let defaultPallet = hex`
+        000000
+        FFFFFF
+        FF2121
+        FF93C4
+        FF8135
+        FFF609
+        249CA3
+        78DC52
+        003FAD
+        87F2FF
+        8E2EC4
+        A4839F
+        5C406C
+        E5CDC4
+        91463D
+        000000
+    `;
+
+//To hold the changes.
+let workingPallet = hex`
+        000000
+        FFFFFF
+        FF2121
+        FF93C4
+        FF8135
+        FFF609
+        249CA3
+        78DC52
+        003FAD
+        87F2FF
+        8E2EC4
+        A4839F
+        5C406C
+        E5CDC4
+        91463D
+        000000
+    `;
+
 let directions = [
     [0,1],
     [0,-1],
@@ -339,6 +379,58 @@ namespace PixelUtils {
         }
     }
 
+    /*
+    function reconstruct_path(cameFrom, current)
+    total_path := {current}
+    while current in cameFrom.Keys:
+        current := cameFrom[current]
+        total_path.prepend(current)
+    return total_path
+
+// A* finds a path from start to goal.
+// h is the heuristic function. h(n) estimates the cost to reach goal from node n.
+function A_Star(start, goal, h)
+    // The set of discovered nodes that may need to be (re-)expanded.
+    // Initially, only the start node is known.
+    // This is usually implemented as a min-heap or priority queue rather than a hash-set.
+    openSet := {start}
+
+    // For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from the start
+    // to n currently known.
+    cameFrom := an empty map
+
+    // For node n, gScore[n] is the currently known cost of the cheapest path from start to n.
+    gScore := map with default value of Infinity
+    gScore[start] := 0
+
+    // For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
+    // how cheap a path could be from start to finish if it goes through n.
+    fScore := map with default value of Infinity
+    fScore[start] := h(start)
+
+    while openSet is not empty
+        // This operation can occur in O(Log(N)) time if openSet is a min-heap or a priority queue
+        current := the node in openSet having the lowest fScore[] value
+        if current = goal
+            return reconstruct_path(cameFrom, current)
+
+        openSet.Remove(current)
+        for each neighbor of current
+            // d(current,neighbor) is the weight of the edge from current to neighbor
+            // tentative_gScore is the distance from start to the neighbor through current
+            tentative_gScore := gScore[current] + d(current, neighbor)
+            if tentative_gScore < gScore[neighbor]
+                // This path to neighbor is better than any previous one. Record it!
+                cameFrom[neighbor] := current
+                gScore[neighbor] := tentative_gScore
+                fScore[neighbor] := tentative_gScore + h(neighbor)
+                if neighbor not in openSet
+                    openSet.add(neighbor)
+
+    // Open set is empty but goal was never reached
+    return failure
+    */
+
     //TODO
     //Basic Pathdfinding.
     export function BasicPathfindTileMap(
@@ -369,9 +461,44 @@ namespace PixelUtils {
             }
         }
 
-    
         return [];
     }
-       
+
+    //Colour pallet switching...
+    //% block
+    //% blockId="updateColourPallet" block="Update Colour Pallet"
+    export function updateColourPallet() {
+        image.setPalette(workingPallet);
+    }
+
+    //% block
+    //% blockId="resetColourPallet" block="Reset Colour Pallet"
+    export function resetColourPallet() {
+        workingPallet = defaultPallet
+        updateColourPallet()
+    }
+
+    //% block
+    //% blockId="setColourIndex" block="Set Colour Index:$index Red:$red  Green:$green  Blue:$blue "
+    export function setColourIndex(index: number, red: number, green: number, blue: number) {
+        const MAX_SIZE = 16 - 1;
+        if (index > MAX_SIZE || index < 0) {
+            console.warn("Incorrect index provided over size or under.");
+            index = clamp(index, 0, MAX_SIZE);
+        }
+        
+        const pallet = pins.createBuffer(workingPallet.length)
+        for (let i = 0; i < workingPallet.length; i++) {
+            pallet[i] = workingPallet[i]
+        }
+
+        const offset = index * 3
+        pallet[offset] = red
+        pallet[offset + 1] = green
+        pallet[offset + 2] = blue
+
+        workingPallet = pallet
+        updateColourPallet()
+    }
 
 }
