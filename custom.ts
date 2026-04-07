@@ -4,6 +4,8 @@
 * I advice teaching yourself this not just use this and create something learn how todo it then use this.
 */
 
+const ITER_LIMIT = 65033;
+
 //For resetting.
 let defaultPallet = hex`
         000000
@@ -326,13 +328,13 @@ namespace PixelUtils {
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
-        let iterLimit = 65033;
-        while (step < distance && iterCount < iterLimit) {
+       
+        while (step < distance && iterCount < ITER_LIMIT) {
             iterCount++;
             currentX = Math.floor((currentX + (1 * tempCos)));
             currentY = Math.floor(currentY + (1 * tempSin));
             step++;
-            if (iterCount >= iterLimit) {
+            if (iterCount >= ITER_LIMIT) {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
 
@@ -379,58 +381,6 @@ namespace PixelUtils {
         }
     }
 
-    /*
-    function reconstruct_path(cameFrom, current)
-    total_path := {current}
-    while current in cameFrom.Keys:
-        current := cameFrom[current]
-        total_path.prepend(current)
-    return total_path
-
-// A* finds a path from start to goal.
-// h is the heuristic function. h(n) estimates the cost to reach goal from node n.
-function A_Star(start, goal, h)
-    // The set of discovered nodes that may need to be (re-)expanded.
-    // Initially, only the start node is known.
-    // This is usually implemented as a min-heap or priority queue rather than a hash-set.
-    openSet := {start}
-
-    // For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from the start
-    // to n currently known.
-    cameFrom := an empty map
-
-    // For node n, gScore[n] is the currently known cost of the cheapest path from start to n.
-    gScore := map with default value of Infinity
-    gScore[start] := 0
-
-    // For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
-    // how cheap a path could be from start to finish if it goes through n.
-    fScore := map with default value of Infinity
-    fScore[start] := h(start)
-
-    while openSet is not empty
-        // This operation can occur in O(Log(N)) time if openSet is a min-heap or a priority queue
-        current := the node in openSet having the lowest fScore[] value
-        if current = goal
-            return reconstruct_path(cameFrom, current)
-
-        openSet.Remove(current)
-        for each neighbor of current
-            // d(current,neighbor) is the weight of the edge from current to neighbor
-            // tentative_gScore is the distance from start to the neighbor through current
-            tentative_gScore := gScore[current] + d(current, neighbor)
-            if tentative_gScore < gScore[neighbor]
-                // This path to neighbor is better than any previous one. Record it!
-                cameFrom[neighbor] := current
-                gScore[neighbor] := tentative_gScore
-                fScore[neighbor] := tentative_gScore + h(neighbor)
-                if neighbor not in openSet
-                    openSet.add(neighbor)
-
-    // Open set is empty but goal was never reached
-    return failure
-    */
-
     //TODO
     //Basic Pathdfinding.
     export function BasicPathfindTileMap(
@@ -443,22 +393,44 @@ function A_Star(start, goal, h)
 
         let currentX = fromPosition.col;
         let currentY = fromPosition.row;
+        let targetX = toPosition.col;
+        let targetY = toPosition.row;
+        //Before doing anything complex try raycasting directly to the target and see if it s clear.
 
-        let resultPathNodes: number [][] = [[currentX, currentY]];
+        let angleToTile = calcAngle(currentX, currentY, targetX, targetY);
+        let distanceToTile = calcDistance(currentX, currentY, targetX, targetY);
+        let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
+        if (raycastResult.getColumn() == targetX && raycastResult.getRow() == targetY 
+            && raycastResult.getHitResult() == HitTypeEnum.MISS) {
+            return [[currentX, currentY]]; // Path is clear just head towards the position.
+        }        
 
-        for(let x = -scanMaxArea; x != scanMaxArea; x++) {
-            for (let y = -scanMaxArea; y != scanMaxArea; y++) {
-                let stepX = currentX + x;
-                let stepY = currentY + y;
+        let finished = false;
+        let iterCounter = 0;
+        let resultPathNodes: Node[] = [new Node([currentX, currentY], null)];
+        let badPathNodes: Node[]    = [];
+
+        let currentNode = new Node([currentX, currentY], null);
+        while(!finished || iterCounter != ITER_LIMIT) {
+            iterCounter++;
+            
+
+            /*
+            let stepX = currentX + x;
+            let stepY = currentY + y;
                 
-                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepX, stepY))) continue;
-                
-                let angleToTile = calcAngle(currentX, currentY, stepX, stepY);
-                let distanceToTile = calcDistance(currentX, currentY, stepX, stepY);
-                let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
-
-                //if ()
+            if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepX, stepY))) {
+                badPathNodes.push(new Node())
+                continue;
             }
+            */
+                
+            //angleToTile = calcAngle(currentX, currentY, stepX, stepY);
+            //distanceToTile = calcDistance(currentX, currentY, stepX, stepY);
+            //raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
+
+            //if ()
+            
         }
 
         return [];
@@ -466,16 +438,10 @@ function A_Star(start, goal, h)
 
     //Colour pallet switching...
     //% block
-    //% blockId="updateColourPallet" block="Update Colour Pallet"
-    export function updateColourPallet() {
-        image.setPalette(workingPallet);
-    }
-
-    //% block
     //% blockId="resetColourPallet" block="Reset Colour Pallet"
     export function resetColourPallet() {
         workingPallet = defaultPallet
-        updateColourPallet()
+        image.setPalette(workingPallet);
     }
 
     //% block
@@ -498,7 +464,7 @@ function A_Star(start, goal, h)
         pallet[offset + 2] = blue
 
         workingPallet = pallet
-        updateColourPallet()
+        image.setPalette(workingPallet);
     }
 
 }
