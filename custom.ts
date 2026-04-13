@@ -5,6 +5,8 @@
 */
 
 const ITER_LIMIT = 65033;
+const DIRECTIONS = [[0, 1],[0, -1],[1, 0],[-1.0]]
+
 
 //For resetting.
 let defaultPallet = hex`
@@ -46,12 +48,6 @@ let workingPallet = hex`
         000000
     `;
 
-let directions = [
-    [0,1],
-    [0,-1],
-    [1,0],
-    [-1.0]
-]
 
 enum HitTypeEnum {
     MISS,
@@ -93,6 +89,12 @@ class Node {
         this.parent = parent;
     }
 
+    public equals(other: Node) {
+        if (this == other) return true;
+        if (!(other instanceof Node)) return false;
+        return this.position[0] === other.position[0] || this.position[1] === other.position[1]
+    }
+
     public getPosition() {
         return this.position;
     }
@@ -100,7 +102,27 @@ class Node {
     public getParent() {
         return this.parent;
     }
+
+    public calcFScore() {
+        this.fScore = this.gScore + this.hScore;
+    }
+
+    public calcHScore(targetPos: Array<any>) {
+        this.hScore = PixelUtils.calcDistance(this.position[0], this.position[1], targetPos[0], targetPos[1]);
+    }
+
+    public calcGScore(currentNode: Node) {
+        let cPos = currentNode.position
+        this.gScore = PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1])
+    }
 }
+
+/*
+        // Create the f, g, and h values
+        child.g = currentNode.g + distance between child and current
+        child.h = distance from child to end
+        child.f = child.g + child.h
+        */
 
 
 /**
@@ -389,51 +411,70 @@ namespace PixelUtils {
         minDistance: number,
         scanMaxArea: number = 5,
         maxScanBranches: number = 4,
-    ): number[][] {
-
+    ): Node[] {
         let currentX = fromPosition.col;
         let currentY = fromPosition.row;
         let targetX = toPosition.col;
         let targetY = toPosition.row;
+        let currentNode = new Node([currentX, currentY], null);
+        
         //Before doing anything complex try raycasting directly to the target and see if it s clear.
-
         let angleToTile = calcAngle(currentX, currentY, targetX, targetY);
         let distanceToTile = calcDistance(currentX, currentY, targetX, targetY);
         let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
         if (raycastResult.getColumn() == targetX && raycastResult.getRow() == targetY 
             && raycastResult.getHitResult() == HitTypeEnum.MISS) {
-            return [[currentX, currentY]]; // Path is clear just head towards the position.
+            return [currentNode]; // Path is clear just head towards the position.
         }        
 
         let finished = false;
         let iterCounter = 0;
-        let resultPathNodes: Node[] = [new Node([currentX, currentY], null)];
-        let badPathNodes: Node[]    = [];
+        let currentNodeIndex = 0;
+        let openNodeList: Node[] = [currentNode];
+        let closedNodeList: Node[] = [];
 
-        let currentNode = new Node([currentX, currentY], null);
+        let path: Node[] = [];
         while(!finished || iterCounter != ITER_LIMIT) {
             iterCounter++;
             
-
-            /*
-            let stepX = currentX + x;
-            let stepY = currentY + y;
+            //Check the direction adding them to list or open or closed spaces.
+            for(let dir of DIRECTIONS) {
+                let currentPos = currentNode.getPosition();
+                let stepPos = [currentPos[0] + dir[0], currentPos[1] = dir[1]];
+                let tempNode = new Node(stepPos, currentNode);
                 
-            if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepX, stepY))) {
-                badPathNodes.push(new Node())
-                continue;
+                if (closedNodeList.some(node => tempNode.equals(currentNode))) continue
+
+                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepPos[0], stepPos[1]))) {
+                    closedNodeList.push(tempNode)
+                    continue;
+                }
+
+                tempNode.calcGScore( currentNode );
+                tempNode.calcHScore( [targetX, targetY]);
+                tempNode.calcFScore();
+
             }
-            */
-                
-            //angleToTile = calcAngle(currentX, currentY, stepX, stepY);
-            //distanceToTile = calcDistance(currentX, currentY, stepX, stepY);
-            //raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
+            // Then go through the new additions finding the best position...
+            let index = 0
+            while (index != openNodeList.length - 1) {
+                let tempNode = openNodeList[index];
+                if (tempNode.fScore < currentNode.fScore) {
+                    currentNode = tempNode;
+                    currentNodeIndex = index;
+                }
+                index++;
+            }
 
-            //if ()
+            // Remove the moved from psotions to closed.
+            openNodeList.removeAt(currentNodeIndex);
+            closedNodeList.push(currentNode);
+
             
+
         }
 
-        return [];
+        return path;
     }
 
     //Colour pallet switching...
