@@ -210,9 +210,9 @@ function testRaycast() {
 }
 
 function testPathFinding() {
-    //console.log("Path Finding started...")
-    //let result = PixelUtils.calcPathfindTileMap(tiles.getTileLocation(1,1), tiles.getTileLocation(1, 10), 20)
-    //console.log(result)
+    console.log("Path Finding started...")
+    let result = PixelUtils.BasicPathfindTileMap([1,1], [1, 10])
+    console.log(result)
 }
 
 function testPallet() {
@@ -233,8 +233,8 @@ testAngle();
 testConverters();
 testVelocity();
 testRaycast();
+//testPallet();
 testPathFinding();
-testPallet();
 //
 //PixelUtils.showDebug()
 

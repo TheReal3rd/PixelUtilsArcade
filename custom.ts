@@ -5,7 +5,7 @@
 */
 
 const ITER_LIMIT = 65033;
-const DIRECTIONS = [[0, 1],[0, -1],[1, 0],[-1.0]]
+const DIRECTIONS = [[0, 1],[0, -1],[1, 0],[-1,0]]
 
 
 //For resetting.
@@ -89,7 +89,7 @@ class Node {
         this.parent = parent;
     }
 
-    public equals(other: Node) {
+    equals(other: Node) {
         if (this == other) return true;
         if (!(other instanceof Node)) return false;
         return this.position[0] === other.position[0] || this.position[1] === other.position[1]
@@ -113,7 +113,8 @@ class Node {
 
     public calcGScore(currentNode: Node) {
         let cPos = currentNode.position
-        this.gScore = PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1])
+        //PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1]) +
+        this.gScore = currentNode.gScore + 1
     }
 }
 
@@ -406,46 +407,66 @@ namespace PixelUtils {
     //TODO
     //Basic Pathdfinding.
     export function BasicPathfindTileMap(
-        fromPosition: tiles.Location,
-        toPosition: tiles.Location,
-        minDistance: number,
-        scanMaxArea: number = 5,
-        maxScanBranches: number = 4,
-    ): Node[] {
-        let currentX = fromPosition.col;
-        let currentY = fromPosition.row;
-        let targetX = toPosition.col;
-        let targetY = toPosition.row;
+        fromPosition: number[],
+        toPosition: number[]
+    ): number[][] {
+        let currentX = fromPosition[0];
+        let currentY = fromPosition[1];
+        let targetX = toPosition[0];
+        let targetY = toPosition[1];
         let currentNode = new Node([currentX, currentY], null);
         
+        /*
         //Before doing anything complex try raycasting directly to the target and see if it s clear.
         let angleToTile = calcAngle(currentX, currentY, targetX, targetY);
         let distanceToTile = calcDistance(currentX, currentY, targetX, targetY);
         let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
         if (raycastResult.getColumn() == targetX && raycastResult.getRow() == targetY 
             && raycastResult.getHitResult() == HitTypeEnum.MISS) {
-            return [currentNode]; // Path is clear just head towards the position.
+            return [[currentX, currentY]]; // Path is clear just head towards the position.
         }        
+        */
 
         let finished = false;
         let iterCounter = 0;
         let currentNodeIndex = 0;
         let openNodeList: Node[] = [currentNode];
         let closedNodeList: Node[] = [];
-
-        let path: Node[] = [];
-        while(!finished || iterCounter != ITER_LIMIT) {
+        console.log("Started")
+        while(!finished && iterCounter < ITER_LIMIT) {
             iterCounter++;
             
+            console.log("Clean up")
+            // Then go through the new additions finding the best position...
+            let index = 0
+            while (index != openNodeList.length) {
+                let tempNode = openNodeList[index];
+                if (tempNode.fScore < currentNode.fScore) {
+                    currentNode = tempNode;
+                    currentX = tempNode.getPosition()[0];
+                    currentY = tempNode.getPosition()[1];
+                    currentNodeIndex = index;
+                }
+                index++;
+            }
+
+            // Remove the moved from position to closed.
+            openNodeList.splice(currentNodeIndex, 1);
+            closedNodeList.push(currentNode);
+
             //Check the direction adding them to list or open or closed spaces.
+            console.log("Dir Check")
             for(let dir of DIRECTIONS) {
                 let currentPos = currentNode.getPosition();
-                let stepPos = [currentPos[0] + dir[0], currentPos[1] = dir[1]];
+                let stepPos = [currentPos[0] + dir[0], currentPos[1] + dir[1]];
                 let tempNode = new Node(stepPos, currentNode);
                 
-                if (closedNodeList.some(node => tempNode.equals(currentNode))) continue
+                if (openNodeList.find(node => node.equals(tempNode))) continue
+                if (closedNodeList.find(node => node.equals(tempNode))) continue
 
-                if (tiles.tileAtLocationIsWall(tiles.getTileLocation(stepPos[0], stepPos[1]))) {
+                let tilePos = tiles.getTileLocation(stepPos[0], stepPos[1])
+
+                if (tiles.tileAtLocationIsWall(tilePos)) {
                     closedNodeList.push(tempNode)
                     continue;
                 }
@@ -454,27 +475,25 @@ namespace PixelUtils {
                 tempNode.calcHScore( [targetX, targetY]);
                 tempNode.calcFScore();
 
+                openNodeList.push(tempNode);
             }
-            // Then go through the new additions finding the best position...
-            let index = 0
-            while (index != openNodeList.length - 1) {
-                let tempNode = openNodeList[index];
-                if (tempNode.fScore < currentNode.fScore) {
-                    currentNode = tempNode;
-                    currentNodeIndex = index;
+
+            console.log("Finish finalize")
+            if (currentX == targetX && currentY == targetY) {
+                console.log("Finish started...")
+                let current = currentNode;
+                let path: number[][] = [];
+                while(current != null) {
+                    path.push(current.getPosition());
+                    current = current.getParent();
                 }
-                index++;
+                path.reverse();
+                return path;
             }
-
-            // Remove the moved from psotions to closed.
-            openNodeList.removeAt(currentNodeIndex);
-            closedNodeList.push(currentNode);
-
-            
 
         }
 
-        return path;
+        return [];
     }
 
     //Colour pallet switching...
