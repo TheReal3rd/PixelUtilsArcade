@@ -5,7 +5,7 @@
 */
 
 const ITER_LIMIT = 65033;
-const DIRECTIONS = [[0, 1],[0, -1],[1, 0],[-1,0]]
+const DIRECTIONS = [ [0, 1], [0, -1] ,[1, 0], [-1, 0]]
 
 
 //For resetting.
@@ -89,10 +89,10 @@ class Node {
         this.parent = parent;
     }
 
-    equals(other: Node) {
+    public equals(other: Node) {
         if (this == other) return true;
         if (!(other instanceof Node)) return false;
-        return this.position[0] === other.position[0] || this.position[1] === other.position[1]
+        return this.position[0] == other.position[0] && this.position[1] == other.position[1]
     }
 
     public getPosition() {
@@ -114,7 +114,7 @@ class Node {
     public calcGScore(currentNode: Node) {
         let cPos = currentNode.position
         //PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1]) +
-        this.gScore = currentNode.gScore + 1
+        this.gScore = PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1]) + 1
     }
 }
 
@@ -415,6 +415,9 @@ namespace PixelUtils {
         let targetX = toPosition[0];
         let targetY = toPosition[1];
         let currentNode = new Node([currentX, currentY], null);
+        currentNode.gScore = 1;
+        currentNode.calcHScore([targetX, targetY]);
+        currentNode.calcFScore();
         
         /*
         //Before doing anything complex try raycasting directly to the target and see if it s clear.
@@ -427,58 +430,59 @@ namespace PixelUtils {
         }        
         */
 
-        let finished = false;
         let iterCounter = 0;
         let currentNodeIndex = 0;
         let openNodeList: Node[] = [currentNode];
         let closedNodeList: Node[] = [];
-        console.log("Started")
-        while(!finished && iterCounter < ITER_LIMIT) {
+
+        while(iterCounter < 30) {
             iterCounter++;
-            
-            console.log("Clean up")
-            // Then go through the new additions finding the best position...
-            let index = 0
-            while (index != openNodeList.length) {
-                let tempNode = openNodeList[index];
-                if (tempNode.fScore < currentNode.fScore) {
-                    currentNode = tempNode;
-                    currentX = tempNode.getPosition()[0];
-                    currentY = tempNode.getPosition()[1];
-                    currentNodeIndex = index;
-                }
-                index++;
-            }
-
-            // Remove the moved from position to closed.
-            openNodeList.splice(currentNodeIndex, 1);
-            closedNodeList.push(currentNode);
-
+    
             //Check the direction adding them to list or open or closed spaces.
             console.log("Dir Check")
             for(let dir of DIRECTIONS) {
                 let currentPos = currentNode.getPosition();
                 let stepPos = [currentPos[0] + dir[0], currentPos[1] + dir[1]];
+
                 let tempNode = new Node(stepPos, currentNode);
                 
                 if (openNodeList.find(node => node.equals(tempNode))) continue
                 if (closedNodeList.find(node => node.equals(tempNode))) continue
 
                 let tilePos = tiles.getTileLocation(stepPos[0], stepPos[1])
-
+                tiles.setTileAt(tilePos, myTiles.transparency16)
                 if (tiles.tileAtLocationIsWall(tilePos)) {
                     closedNodeList.push(tempNode)
                     continue;
                 }
 
                 tempNode.calcGScore( currentNode );
-                tempNode.calcHScore( [targetX, targetY]);
+                tempNode.calcHScore( [targetX, targetY] );
                 tempNode.calcFScore();
 
+                console.log(tempNode.fScore)
                 openNodeList.push(tempNode);
+                console.log("Pushed new Node")
             }
 
-            console.log("Finish finalize")
+            console.log("Clean up")
+            // Then go through the new additions finding the best position...
+            for(let index = 0; index != openNodeList.length; index++) {
+                let tempNode = openNodeList[index];
+                if (tempNode.fScore < currentNode.fScore) {
+                    currentNode = tempNode;
+                    currentX = tempNode.getPosition()[0];
+                    currentY = tempNode.getPosition()[1];
+                    currentNodeIndex = index;
+                    console.log("New Current selected")
+                    console.log(currentNode.getPosition())
+                }
+            }
+
+            // Remove the moved from position to closed.
+            //openNodeList.splice(currentNodeIndex, 1);
+            //closedNodeList.push(currentNode);
+
             if (currentX == targetX && currentY == targetY) {
                 console.log("Finish started...")
                 let current = currentNode;

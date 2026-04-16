@@ -211,8 +211,8 @@ function testRaycast() {
 
 function testPathFinding() {
     console.log("Path Finding started...")
-    let result = PixelUtils.BasicPathfindTileMap([1,1], [1, 10])
-    console.log(result)
+    let result = PixelUtils.BasicPathfindTileMap([2,2], [2, 10])
+    console.log("Results: "+result)
 }
 
 function testPallet() {
@@ -235,6 +235,7 @@ testVelocity();
 testRaycast();
 //testPallet();
 testPathFinding();
+
 //
 //PixelUtils.showDebug()
 
