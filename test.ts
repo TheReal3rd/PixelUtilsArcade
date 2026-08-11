@@ -14,7 +14,7 @@ function testDistance() {
     console.log("Manhattan Distance Tests")
     distTest = PixelUtils.calcManhattanDistance(0, 0, 10, 0)
     console.log(distTest == 10 ? "Stage 1 correct result. " + distTest : "Stage 1 Incorrect result given. " + distTest)
-    distTest = PixelUtils.calcManhattanDistance(0, 0 , 10, 10)
+    distTest = PixelUtils.calcManhattanDistance(0, 0, 10, 10)
     console.log(distTest == 20 ? "Stage 2 correct result. " + distTest : "Stage 2 Incorrect result given. " + distTest)
 }
 
@@ -30,10 +30,10 @@ function testConverters() {
     console.log("Degrees, radians and clamp converter test")
     console.log("Radians Tests")
     let radians = Math.round(PixelUtils.toRadians(45) * 10000) / 10000 // This rounds the result to 4 Decimal places.
-    console.log(radians == 0.7854 ? "Stage 1 correct result. " + radians : "Stage 1 Incorrect result. "+ radians)
+    console.log(radians == 0.7854 ? "Stage 1 correct result. " + radians : "Stage 1 Incorrect result. " + radians)
     console.log("Degrees Tests")
     let degrees = Math.round(PixelUtils.toDegrees(radians))
-    console.log(degrees == 45 ? "Stage 2 correct result. " + degrees : "Stage 2 Incorrect result. "+  degrees)
+    console.log(degrees == 45 ? "Stage 2 correct result. " + degrees : "Stage 2 Incorrect result. " + degrees)
     console.log("Clamp Tests")
     let value = 8000
     value = PixelUtils.clamp(value, 10, 100)
@@ -138,7 +138,7 @@ function testRaycast() {
     scene.cameraFollowSprite(mySprite)
     let tempPos = tiles.getTileLocation(7, 7)
     mySprite.setPosition(tempPos.x, tempPos.y)
- 
+
     PixelUtils.laserProjectile(tempPos.x, tempPos.y, 0, 100, sprites.create(img`
     e e e . . . . e e e . . . . 
     c d d c . . c d d c . . . . 
@@ -190,7 +190,7 @@ function testRaycast() {
     )
     console.logValue("(Sprite -> Sprite) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
     resultTest = PixelUtils.spriteRaycast(
-        mySprite.x - (4 * 16), 
+        mySprite.x - (4 * 16),
         mySprite.y,
         0,
         800,
@@ -226,8 +226,43 @@ function testRaycast() {
 
 function testPathFinding() {
     console.log("Path Finding started...")
-    let result = PixelUtils.BasicPathfindTileMap([7,7], [6, 8])
-    console.log("Results: "+result)
+
+    // Same start/end
+    let same = PixelUtils.BasicPathfindTileMap([7, 7], [7, 7])
+    console.log(same.length == 1 && same[0][0] == 7 && same[0][1] == 7
+        ? "Stage 1 correct (same tile)."
+        : "Stage 1 Incorrect result given. " + same)
+
+    // Short clear path near the player spawn used by raycast tests
+    let result = PixelUtils.BasicPathfindTileMap([7, 7], [6, 8])
+    let ok = result.length >= 2
+        && result[0][0] == 7 && result[0][1] == 7
+        && result[result.length - 1][0] == 6 && result[result.length - 1][1] == 8
+        && result.length - 1 == 2 // manhattan distance
+    console.log(ok
+        ? "Stage 2 correct path length " + result.length + ": " + result
+        : "Stage 2 Incorrect result given. " + result)
+
+    // Path should walk around the wall at (3, 7)
+    let aroundWall = PixelUtils.BasicPathfindTileMap([2, 7], [4, 7])
+    ok = aroundWall.length >= 2
+        && aroundWall[0][0] == 2 && aroundWall[0][1] == 7
+        && aroundWall[aroundWall.length - 1][0] == 4 && aroundWall[aroundWall.length - 1][1] == 7
+    let steppedOnWall = false
+    for (let i = 0; i < aroundWall.length; i++) {
+        if (aroundWall[i][0] == 3 && aroundWall[i][1] == 7) {
+            steppedOnWall = true
+        }
+    }
+    console.log(ok && !steppedOnWall
+        ? "Stage 3 correct path around wall: " + aroundWall
+        : "Stage 3 Incorrect result given. " + aroundWall)
+
+    // Target on a wall is unreachable
+    let blocked = PixelUtils.BasicPathfindTileMap([7, 7], [3, 7])
+    console.log(blocked.length == 0
+        ? "Stage 4 correct (wall target unreachable)."
+        : "Stage 4 Incorrect result given. " + blocked)
 }
 
 function testPallet() {
@@ -243,7 +278,7 @@ function testPallet() {
 }
 
 let timeDelayOBJ = PixelUtils.createTimeDelay();
-forever(function() {
+forever(function () {
     if (timeDelayOBJ.passedMS(5000)) {
         console.log("5 seconds has passed....");
         timeDelayOBJ.reset();
@@ -261,4 +296,3 @@ testPathFinding();
 
 //
 //PixelUtils.showDebug()
-

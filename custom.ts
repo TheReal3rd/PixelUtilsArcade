@@ -434,6 +434,7 @@ namespace PixelUtils {
      * @param angle The angle the raycast will be sent towards.
      * @param distance The maximum distance the raycast projects can step.
      * @param kind The sprite to detect a collision with.
+     * @param Minimal Distance the minimal distance from porjection to a sprite to trigger a collision. -1 Assumes sprites min size.
      */
     //% block
     //% blockId="spriteRaycast" block="SpriteRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind Minimal Distance:$minDistance"
@@ -506,73 +507,95 @@ namespace PixelUtils {
         }
     }
 
-    //TODO
-    //Basic Pathdfinding.
+    /**
+     * Returns true when the tile at column/row is on the map and is not a wall.
+     * Out-of-bounds tiles are treated as blocked (MakeCode reports them as walls).
+     */
+    function isTileWalkable(col: number, row: number): boolean {
+        return !tiles.tileAtLocationIsWall(tiles.getTileLocation(col, row));
+    }
+
+    /**
+     * Finds a walkable 4-direction path between two tile positions using A*.
+     * Returns an array of [column, row] steps from start to end, or [] if unreachable.
+     * @param fromPosition Start tile as [column, row]
+     * @param toPosition End tile as [column, row]
+     */
+    //% block
+    //% blockId="basicPathfindTileMap" block="Pathfind from $fromPosition to $toPosition"
     export function BasicPathfindTileMap(
         fromPosition: number[],
         toPosition: number[]
     ): number[][] {
-        let currentX = fromPosition[0];
-        let currentY = fromPosition[1];
+        let startX = fromPosition[0];
+        let startY = fromPosition[1];
         let targetX = toPosition[0];
         let targetY = toPosition[1];
-        let currentNode = new Node([currentX, currentY], null);
-        currentNode.gScore = 0;
-        currentNode.calcHScore([targetX, targetY]);
-        currentNode.calcFScore();
-        
-        /*
-        //Before doing anything complex try raycasting directly to the target and see if it s clear.
-        let angleToTile = calcAngle(currentX, currentY, targetX, targetY);
-        let distanceToTile = calcDistance(currentX, currentY, targetX, targetY);
-        let raycastResult = tileMapRaycast(currentX, currentY, angleToTile, distanceToTile, -1);
-        if (raycastResult.getColumn() == targetX && raycastResult.getRow() == targetY 
-            && raycastResult.getHitResult() == HitTypeEnum.MISS) {
-            return [[currentX, currentY]]; // Path is clear just head towards the position.
-        }        
-        */
 
-        let iterCounter = 0;
-        let openNodeList: Node[] = [currentNode];
+        if (startX == targetX && startY == targetY) {
+            return [[startX, startY]];
+        }
 
-        while(iterCounter < ITER_LIMIT) {
-            iterCounter++;
+        // Goal must be walkable; allow starting on a blocked tile so a sprite
+        // that somehow sits on a wall can still escape.
+        if (!isTileWalkable(targetX, targetY)) {
+            return [];
+        }
 
-            let bestNode = null;
-            for(let dir of DIRECTIONS) {
-                let currentPos = currentNode.getPosition();
-                let xStep = currentX + dir[0];
-                let yStep = currentY + dir[1];
+        let startNode = new Node([startX, startY], null);
+        startNode.gScore = 0;
+        startNode.calcHScore([targetX, targetY]);
+        startNode.calcFScore();
 
-                let tempNode = new Node([xStep, yStep], currentNode);
-                
-                //if (openNodeList.some(node => node.equals(tempNode))) continue;
+        let openList: Node[] = [startNode];
+        // Tilemaps are at most 255x255; pack col/row into a single index.
+        let closed: boolean[] = [];
 
-                let tilePos = tiles.getTileLocation(xStep, yStep)
-                tiles.setTileAt(tilePos, myTiles.transparency16);
-                if (tiles.tileAtLocationIsWall(tilePos)) continue;
+        function tileKey(col: number, row: number): number {
+            return col + (row << 8);
+        }
 
-                tempNode.calcGScore( currentNode );
-                tempNode.calcHScore( [targetX, targetY] );
-                tempNode.calcFScore();
-
-                if (tempNode.fScore < currentNode.fScore) {
-                    bestNode = tempNode;
-                    console.log("New current selected...");
+        function findOpenIndex(col: number, row: number): number {
+            for (let i = 0; i < openList.length; i++) {
+                let pos = openList[i].getPosition();
+                if (pos[0] == col && pos[1] == row) {
+                    return i;
                 }
             }
-                
-            if(bestNode != null) {
-                currentNode = bestNode;
-                currentX = currentNode.getPosition()[0];
-                currentY = currentNode.getPosition()[1];
-            }
+            return -1;
+        }
 
+        function lowestFIndex(): number {
+            let best = 0;
+            for (let i = 1; i < openList.length; i++) {
+                if (openList[i].fScore < openList[best].fScore) {
+                    best = i;
+                }
+            }
+            return best;
+        }
+
+        let iterCounter = 0;
+        while (openList.length > 0 && iterCounter < ITER_LIMIT) {
+            iterCounter++;
+
+            let bestIndex = lowestFIndex();
+            let currentNode = openList[bestIndex];
+            openList.removeAt(bestIndex);
+
+            let currentPos = currentNode.getPosition();
+            let currentX = currentPos[0];
+            let currentY = currentPos[1];
+            let currentKey = tileKey(currentX, currentY);
+
+            if (closed[currentKey]) {
+                continue;
+            }
+            closed[currentKey] = true;
 
             if (currentX == targetX && currentY == targetY) {
-                console.log("Finished");
-                let current = currentNode;
                 let path: number[][] = [];
+                let current: Node = currentNode;
                 while (current != null) {
                     path.push(current.getPosition());
                     current = current.getParent();
@@ -580,8 +603,34 @@ namespace PixelUtils {
                 path.reverse();
                 return path;
             }
-            
 
+            for (let dir of DIRECTIONS) {
+                let nextX = currentX + dir[0];
+                let nextY = currentY + dir[1];
+                let nextKey = tileKey(nextX, nextY);
+
+                if (closed[nextKey]) continue;
+                if (!isTileWalkable(nextX, nextY)) continue;
+
+                let tentativeG = currentNode.gScore + 1;
+                let existingIndex = findOpenIndex(nextX, nextY);
+
+                if (existingIndex >= 0) {
+                    if (tentativeG >= openList[existingIndex].gScore) continue;
+
+                    let improved = new Node([nextX, nextY], currentNode);
+                    improved.gScore = tentativeG;
+                    improved.calcHScore([targetX, targetY]);
+                    improved.calcFScore();
+                    openList[existingIndex] = improved;
+                } else {
+                    let neighbor = new Node([nextX, nextY], currentNode);
+                    neighbor.gScore = tentativeG;
+                    neighbor.calcHScore([targetX, targetY]);
+                    neighbor.calcFScore();
+                    openList.push(neighbor);
+                }
+            }
         }
 
         return [];
