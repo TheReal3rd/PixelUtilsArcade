@@ -382,9 +382,11 @@ namespace PixelUtils {
 
     /**
      * TileMap Raycast returns results on information of what was hit.
-     * @param tileLocation TileMap location to raycast from.
-     * @param angle The angle the raycast will be sent towards.
-     * @param speed The speed you wish to head the direction at.
+     * @param Column the column position for projection.
+     * @param Row the row position for projection.
+     * @param Angle the angle of projection.
+     * @param Distance maximum distance of travel before termination.
+     * @param Kind entity kind for spite detection and filtering.
      */
     //% block
     //% blockId="tileMapRaycast" block="TileRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind"
@@ -434,37 +436,46 @@ namespace PixelUtils {
      * @param kind The sprite to detect a collision with.
      */
     //% block
-    //% blockId="spriteRaycast" block="SpriteRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind"
+    //% blockId="spriteRaycast" block="SpriteRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind Minimal Distance:$minDistance"
     //% kind.shadow="spritekind"
-    export function spriteRaycast(posX: number, posY: number, angle: number, distance: number, kind: number): HitResultTileMap {
-        //TODO in the future add a check to see if a tileMap is active or not.
-        let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
+    export function spriteRaycast(posX: number, posY: number, angle: number, distance: number, kind: number, minDistance: number): HitResultTileMap {
+        let iterCount = 0;
         let currentX = posX;
         let currentY = posY;
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
 
-        while (step < distance && iterCount < ITER_LIMIT) {
+        while (step < distance && iterCount < distance + 10) {
             iterCount++;
-            currentX = Math.floor((currentX + (1 * tempCos)));
-            currentY = Math.floor(currentY + (1 * tempSin));
+            currentX = currentX + (1 * tempCos);
+            currentY = currentY + (1 * tempSin);
             step++;
-            if (iterCount >= ITER_LIMIT) {
+
+            if (iterCount >= distance + 10) {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
 
-            if (kind == -1) continue; // Incase people don't need to check for entities.
+            if (kind == -1) {
+                break;
+                // TODO make the program hard crash. Else this will be alot of useless compute.
+                //How? Error isn't supported? why? Just breaking to escape.
+            }
 
             let spriteArray = sprites.allOfKind(kind);
             for (let x = 0; x != spriteArray.length; x++) {
                 let sprite = spriteArray[x];
-                let location = sprite.tilemapLocation();
-                if (location.column == currentX && location.row == currentY) {
+                let spX = sprite.x;
+                let spY = sprite.y;
+                if (minDistance == -1){
+                    minDistance = Math.min(sprite.width, sprite.height);
+                } 
+
+                let distance = calcDistance(currentX, currentY, spX, spY);
+                if (distance <= minDistance) {
                     return new HitResultTileMap(currentX, currentY, HitTypeEnum.SPRITE, sprite); // TODO Switch the hitmap result to a dedicated for sprite raycasting.
                 }
             }
-            
         }
         return new HitResultTileMap(currentX, currentY, HitTypeEnum.MISS);
     }

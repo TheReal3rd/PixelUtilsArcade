@@ -190,11 +190,12 @@ function testRaycast() {
     )
     console.logValue("(Sprite -> Sprite) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
     resultTest = PixelUtils.spriteRaycast(
-        8 * 16,
-        8 * 16,
-        270,
-        6,
-        SpriteKind.Enemy
+        mySprite.x - (4 * 16), 
+        mySprite.y,
+        0,
+        800,
+        SpriteKind.Player,
+        -1
     )
     console.logValue("[Sprite Raycast Test](Sprite -> Sprite) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
     resultTest = PixelUtils.tileMapRaycast(
