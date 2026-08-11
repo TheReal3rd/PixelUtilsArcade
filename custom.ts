@@ -5,11 +5,8 @@
 */
 
 const ITER_LIMIT = 65033;
-const DIRECTIONS = [ [0, 1], [0, -1] ,[1, 0], [-1, 0]]
-
-
-//For resetting.
-let defaultPallet = hex`
+const DIRECTIONS = [[0, 1], [0, -1] ,[1, 0], [-1, 0]]
+const DEFAULT_PALLET = hex`
         000000
         FFFFFF
         FF2121
@@ -26,7 +23,7 @@ let defaultPallet = hex`
         E5CDC4
         91463D
         000000
-    `;
+    `;//For resetting.
 
 //To hold the changes.
 let workingPallet = hex`
@@ -87,6 +84,9 @@ class Node {
     constructor(position: Array<any>, parent: Node) {
         this.position = position;
         this.parent = parent;
+        this.gScore = 0;
+        this.hScore = 0;
+        this.fScore = 0; 
     }
 
     public equals(other: Node) {
@@ -108,23 +108,34 @@ class Node {
     }
 
     public calcHScore(targetPos: Array<any>) {
-        this.hScore = PixelUtils.calcDistance(this.position[0], this.position[1], targetPos[0], targetPos[1]);
+        this.hScore = PixelUtils.calcManhattanDistance(this.position[0], this.position[1], targetPos[0], targetPos[1]);
     }
 
     public calcGScore(currentNode: Node) {
-        let cPos = currentNode.position
-        //PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1]) +
-        this.gScore = PixelUtils.calcDistance(this.position[0], this.position[1], cPos[0], cPos[1]) + 1
+        this.gScore = currentNode.gScore + 1
     }
 }
 
-/*
-        // Create the f, g, and h values
-        child.g = currentNode.g + distance between child and current
-        child.h = distance from child to end
-        child.f = child.g + child.h
-        */
+class TimeDelayMS {
 
+    private timerStart: number;
+
+    constructor() {
+        this.timerStart = game.runtime();
+    }
+
+    public reset() {
+        this.timerStart = game.runtime();
+    }
+
+    public passedMS(ms: number) {
+        if(game.runtime() - this.timerStart >= ms) {
+            return true
+        }
+        return false
+    }
+
+}
 
 /**
  * Hit result class to breakdown and provide information on the raycast hit.
@@ -182,28 +193,63 @@ class HitResultTileMap {
  */
 //% weight=100 color=#990099 icon=""
 namespace PixelUtils {
+
     /**
-     * Calculates the distance between to two points.
+     * Creates and returns a TimeDelayMS object.
+     */
+    //% block
+    //% blockId="createTimeDelay" block="Create TimeDelayMS"
+    export function createTimeDelay(): TimeDelayMS {
+        return new TimeDelayMS();
+    }
+
+    /**
+     * Returns whether elapsedTimeMS amount has passed.
+     */
+    //% block
+    //% blockId="hasTimePassedMS" block="Create TimeDelayMS Object:$timeObject MS:$elapsedTimeMS"
+    export function hasTimePassedMS(timeObject: TimeDelayMS, elapsedTimeMS: number): boolean {
+        return timeObject.passedMS(elapsedTimeMS);
+    }
+
+
+    /**
+     * Reset the time object to start remeasuring time duration from the beginning.
+     */
+    //% block
+    //% blockId="resetTime" block="Create TimeDelayMS Object:$timeObject"
+    export function resetTime(timeObject: TimeDelayMS): void {
+        return timeObject.reset();
+    }
+
+    /**
+     * Calculates the euclidean distance between to two points.
      * @param posX The X position of the measure from.
      * @param posY The Y position of the measure from.
      * @param posX1 The X position of the measure to.
      * @param posY1 The Y position of the measure to.
      */
     //% block
-    //% blockId="calcDistance" block="CalcDistance from X:$posX Y:$posY to X:$posX1 Y:$posY1"
+    //% blockId="calcDistance" block="Euclidean Distance from X:$posX Y:$posY to X:$posX1 Y:$posY1"
     export function calcDistance(posX: number, posY: number, posX1: number, posY1: number): number {
         let xDiff = posX - posX1;
         let yDiff = posY - posY1;
-        return Math.sqrt((xDiff * xDiff) + (yDiff * yDiff))
+        return Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
     }
 
     /**
-     * Returns the value of pi.
+     * Calculates the Manhattan distance between to two points.
+     * @param posX The X position of the measure from.
+     * @param posY The Y position of the measure from.
+     * @param posX1 The X position of the measure to.
+     * @param posY1 The Y position of the measure to.
      */
     //% block
-    //% blockID="PI" block="π"
-    export function PI(): number {
-        return Math.PI
+    //% blockId="calcManhattanDistance" block="Manhattan Distance from X:$posX Y:$posY to X:$posX1 Y:$posY1"
+    export function calcManhattanDistance(posX: number, posY: number, posX1: number, posY1: number): number {
+        let dx = Math.abs(posX - posX1);
+        let dy = Math.abs(posY - posY1);
+        return dx + dy;
     }
 
     /**
@@ -215,7 +261,7 @@ namespace PixelUtils {
     //% block
     //% blockId="clamp" block="Clamp Value:$value Min:$minValue Max:$maxValue"
     export function clamp(value: number, minValue: number, maxValue: number): number {
-        return Math.max(Math.min(value, maxValue), minValue)
+        return Math.max(Math.min(value, maxValue), minValue);
     }
 
     /**
@@ -250,7 +296,7 @@ namespace PixelUtils {
     export function calcAngle(posX: number, posY: number, posX1: number, posY1: number): number {
         let xDiff = posX1 - posX;
         let yDiff = posY1 - posY;
-        return toDegrees(Math.atan2(yDiff, xDiff))
+        return toDegrees(Math.atan2(yDiff, xDiff));
     }
 
     /**
@@ -263,7 +309,7 @@ namespace PixelUtils {
     export function calcVelocity(angle: number, speed: number): Array<number> {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
-        return [speed * cos, speed * sin]
+        return [speed * cos, speed * sin];
     }
 
     /**
@@ -278,7 +324,7 @@ namespace PixelUtils {
     export function calcAngularPosition(posX: number, posY: number, angle: number, distance: number): Array<number> {
         let sin = Math.sin(toRadians(angle));
         let cos = Math.cos(toRadians(angle));
-        return [posX + (distance * cos), posY + (distance * sin)]
+        return [posX + (distance * cos), posY + (distance * sin)];
     }
 
     /**
@@ -287,7 +333,7 @@ namespace PixelUtils {
     //% block
     //% blockId="showStats" block="Show Stats"
     export function showStats(): void {
-        game.stats = true
+        game.stats = true;
     }
 
     /**
@@ -296,7 +342,7 @@ namespace PixelUtils {
     //% block
     //% blockId="showDebug" block="Show Debug"
     export function showDebug(): void {
-        game.debug = true
+        game.debug = true;
     }
 
     /**
@@ -316,9 +362,9 @@ namespace PixelUtils {
         let step = 0;
         let tempSin = Math.sin(toRadians(angle));
         let tempCos = Math.cos(toRadians(angle));
-        sprites.destroy(sprite)
-        let image = sprite.image
-        let stepSize = Math.min(image.width, image.height)
+        sprites.destroy(sprite);
+        let image = sprite.image;
+        let stepSize = Math.min(image.width, image.height);
 
         while (step < distance && iterCount < distance + 10) {
             iterCount++;
@@ -329,8 +375,8 @@ namespace PixelUtils {
                 console.log("Warning raycast reached iteration limit. This could effect performance.");
             }
             
-            let tempProjectile = sprites.create(sprite.image, sprite.kind())
-            tempProjectile.setPosition(currentX, currentY)
+            let tempProjectile = sprites.create(sprite.image, sprite.kind());
+            tempProjectile.setPosition(currentX, currentY);
         }
     }
 
@@ -364,7 +410,7 @@ namespace PixelUtils {
             if (tiles.tileAtLocationIsWall(tiles.getTileLocation(currentX, currentY))) {
                 return new HitResultTileMap(currentX, currentY, HitTypeEnum.HIT);
             } else {
-                if (kind == -1)  continue // Incase people don't need to check for entities.
+                if (kind == -1)  continue; // Incase people don't need to check for entities.
 
                 let spriteArray = sprites.allOfKind(kind);
                 for (let x = 0; x != spriteArray.length; x++) {
@@ -378,6 +424,51 @@ namespace PixelUtils {
         }
         return new HitResultTileMap(currentX, currentY, HitTypeEnum.MISS);
     }
+
+    /**
+     * Sprite Raycast returns results on information on what sprite was hit.
+     * @param posX The raycast projection point X.
+     * @param posY The raycast projection point Y.
+     * @param angle The angle the raycast will be sent towards.
+     * @param distance The maximum distance the raycast projects can step.
+     * @param kind The sprite to detect a collision with.
+     */
+    //% block
+    //% blockId="spriteRaycast" block="SpriteRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind"
+    //% kind.shadow="spritekind"
+    export function spriteRaycast(posX: number, posY: number, angle: number, distance: number, kind: number): HitResultTileMap {
+        //TODO in the future add a check to see if a tileMap is active or not.
+        let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
+        let currentX = posX;
+        let currentY = posY;
+        let step = 0;
+        let tempSin = Math.sin(toRadians(angle));
+        let tempCos = Math.cos(toRadians(angle));
+
+        while (step < distance && iterCount < ITER_LIMIT) {
+            iterCount++;
+            currentX = Math.floor((currentX + (1 * tempCos)));
+            currentY = Math.floor(currentY + (1 * tempSin));
+            step++;
+            if (iterCount >= ITER_LIMIT) {
+                console.log("Warning raycast reached iteration limit. This could effect performance.");
+            }
+
+            if (kind == -1) continue; // Incase people don't need to check for entities.
+
+            let spriteArray = sprites.allOfKind(kind);
+            for (let x = 0; x != spriteArray.length; x++) {
+                let sprite = spriteArray[x];
+                let location = sprite.tilemapLocation();
+                if (location.column == currentX && location.row == currentY) {
+                    return new HitResultTileMap(currentX, currentY, HitTypeEnum.SPRITE, sprite); // TODO Switch the hitmap result to a dedicated for sprite raycasting.
+                }
+            }
+            
+        }
+        return new HitResultTileMap(currentX, currentY, HitTypeEnum.MISS);
+    }
+
 
 
     /**
@@ -415,7 +506,7 @@ namespace PixelUtils {
         let targetX = toPosition[0];
         let targetY = toPosition[1];
         let currentNode = new Node([currentX, currentY], null);
-        currentNode.gScore = 1;
+        currentNode.gScore = 0;
         currentNode.calcHScore([targetX, targetY]);
         currentNode.calcFScore();
         
@@ -431,69 +522,54 @@ namespace PixelUtils {
         */
 
         let iterCounter = 0;
-        let currentNodeIndex = 0;
         let openNodeList: Node[] = [currentNode];
-        let closedNodeList: Node[] = [];
 
-        while(iterCounter < 30) {
+        while(iterCounter < ITER_LIMIT) {
             iterCounter++;
-    
-            //Check the direction adding them to list or open or closed spaces.
-            console.log("Dir Check")
+
+            let bestNode = null;
             for(let dir of DIRECTIONS) {
                 let currentPos = currentNode.getPosition();
-                let stepPos = [currentPos[0] + dir[0], currentPos[1] + dir[1]];
+                let xStep = currentX + dir[0];
+                let yStep = currentY + dir[1];
 
-                let tempNode = new Node(stepPos, currentNode);
+                let tempNode = new Node([xStep, yStep], currentNode);
                 
-                if (openNodeList.find(node => node.equals(tempNode))) continue
-                if (closedNodeList.find(node => node.equals(tempNode))) continue
+                //if (openNodeList.some(node => node.equals(tempNode))) continue;
 
-                let tilePos = tiles.getTileLocation(stepPos[0], stepPos[1])
-                tiles.setTileAt(tilePos, myTiles.transparency16)
-                if (tiles.tileAtLocationIsWall(tilePos)) {
-                    closedNodeList.push(tempNode)
-                    continue;
-                }
+                let tilePos = tiles.getTileLocation(xStep, yStep)
+                tiles.setTileAt(tilePos, myTiles.transparency16);
+                if (tiles.tileAtLocationIsWall(tilePos)) continue;
 
                 tempNode.calcGScore( currentNode );
                 tempNode.calcHScore( [targetX, targetY] );
                 tempNode.calcFScore();
 
-                console.log(tempNode.fScore)
-                openNodeList.push(tempNode);
-                console.log("Pushed new Node")
-            }
-
-            console.log("Clean up")
-            // Then go through the new additions finding the best position...
-            for(let index = 0; index != openNodeList.length; index++) {
-                let tempNode = openNodeList[index];
                 if (tempNode.fScore < currentNode.fScore) {
-                    currentNode = tempNode;
-                    currentX = tempNode.getPosition()[0];
-                    currentY = tempNode.getPosition()[1];
-                    currentNodeIndex = index;
-                    console.log("New Current selected")
-                    console.log(currentNode.getPosition())
+                    bestNode = tempNode;
+                    console.log("New current selected...");
                 }
             }
+                
+            if(bestNode != null) {
+                currentNode = bestNode;
+                currentX = currentNode.getPosition()[0];
+                currentY = currentNode.getPosition()[1];
+            }
 
-            // Remove the moved from position to closed.
-            //openNodeList.splice(currentNodeIndex, 1);
-            //closedNodeList.push(currentNode);
 
             if (currentX == targetX && currentY == targetY) {
-                console.log("Finish started...")
+                console.log("Finished");
                 let current = currentNode;
                 let path: number[][] = [];
-                while(current != null) {
+                while (current != null) {
                     path.push(current.getPosition());
                     current = current.getParent();
                 }
                 path.reverse();
                 return path;
             }
+            
 
         }
 
@@ -504,7 +580,7 @@ namespace PixelUtils {
     //% block
     //% blockId="resetColourPallet" block="Reset Colour Pallet"
     export function resetColourPallet() {
-        workingPallet = defaultPallet
+        workingPallet = DEFAULT_PALLET;
         image.setPalette(workingPallet);
     }
 
@@ -517,17 +593,17 @@ namespace PixelUtils {
             index = clamp(index, 0, MAX_SIZE);
         }
         
-        const pallet = pins.createBuffer(workingPallet.length)
+        const pallet = pins.createBuffer(workingPallet.length);
         for (let i = 0; i < workingPallet.length; i++) {
-            pallet[i] = workingPallet[i]
+            pallet[i] = workingPallet[i];
         }
 
-        const offset = index * 3
-        pallet[offset] = red
-        pallet[offset + 1] = green
-        pallet[offset + 2] = blue
+        const offset = index * 3;
+        pallet[offset] = red;
+        pallet[offset + 1] = green;
+        pallet[offset + 2] = blue;
 
-        workingPallet = pallet
+        workingPallet = pallet;
         image.setPalette(workingPallet);
     }
 

@@ -10,6 +10,12 @@ function testDistance() {
     console.log(distTest == 10.0 ? "Stage 1 correct result. " + distTest : "Stage 1 Incorrect result given. " + distTest)
     distTest = PixelUtils.calcDistance(0, 0, 10, 10)
     console.log(distTest > 14 ? "Stage 2 correct result. " + distTest : "Stage 2 Incorrect result given. " + distTest)
+
+    console.log("Manhattan Distance Tests")
+    distTest = PixelUtils.calcManhattanDistance(0, 0, 10, 0)
+    console.log(distTest == 10 ? "Stage 1 correct result. " + distTest : "Stage 1 Incorrect result given. " + distTest)
+    distTest = PixelUtils.calcManhattanDistance(0, 0 , 10, 10)
+    console.log(distTest == 20 ? "Stage 2 correct result. " + distTest : "Stage 2 Incorrect result given. " + distTest)
 }
 
 function testAngle() {
@@ -183,6 +189,14 @@ function testRaycast() {
         SpriteKind.Enemy
     )
     console.logValue("(Sprite -> Sprite) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
+    resultTest = PixelUtils.spriteRaycast(
+        8 * 16,
+        8 * 16,
+        270,
+        6,
+        SpriteKind.Enemy
+    )
+    console.logValue("[Sprite Raycast Test](Sprite -> Sprite) HitType", PixelUtils.getHitResultTileMap(resultTest, HitResultTileMapInfo.HitType))
     resultTest = PixelUtils.tileMapRaycast(
         7,
         7,
@@ -211,7 +225,7 @@ function testRaycast() {
 
 function testPathFinding() {
     console.log("Path Finding started...")
-    let result = PixelUtils.BasicPathfindTileMap([2,2], [2, 10])
+    let result = PixelUtils.BasicPathfindTileMap([7,7], [6, 8])
     console.log("Results: "+result)
 }
 
@@ -227,7 +241,15 @@ function testPallet() {
     PixelUtils.resetColourPallet();
 }
 
-PixelUtils.showStats()
+let timeDelayOBJ = PixelUtils.createTimeDelay();
+forever(function() {
+    if (timeDelayOBJ.passedMS(5000)) {
+        console.log("5 seconds has passed....");
+        timeDelayOBJ.reset();
+    }
+})
+
+PixelUtils.showStats();
 testDistance();
 testAngle();
 testConverters();
