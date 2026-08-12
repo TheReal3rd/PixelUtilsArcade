@@ -285,6 +285,30 @@ namespace PixelUtils {
     }
 
     /**
+     * Converts a percentage to a value range.
+     * @param value The percentage.
+     * @param minValue The minimal value within the range.
+     * @param maxValue The maximum value within the range.
+     */
+    //% block
+    //% blockId="fromPercentage" block="FromPercentage Value:$value Min Value:$minValue Max Value:$maxValue"
+    export function fromPercentage(value: number, minValue: number, maxValue: number): number {
+        return minValue + (value / 100.0) * (maxValue - minValue);
+    }
+
+    /**
+     * Converts a value to a percentage.
+     * @param value The percentage.
+     * @param minValue The minimal value within the range.
+     * @param maxValue The maximum value within the range.
+     */
+    //% block
+    //% blockId="toPercentage" block="ToPercentage Value:$value Min Value:$minValue Max Value:$maxValue"
+    export function roPercentage(value: number, minValue: number, maxValue: number): number {
+        return (value - minValue) / (maxValue - minValue) * 100.0
+    }
+
+    /**
      * Calculates the angle between position.
      * @param posX The X position of the measure from.
      * @param posY The Y position of the measure from.
@@ -437,7 +461,7 @@ namespace PixelUtils {
      * @param Minimal Distance the minimal distance from porjection to a sprite to trigger a collision. -1 Assumes sprites min size.
      */
     //% block
-    //% blockId="spriteRaycast" block="SpriteRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind Minimal Distance:$minDistance"
+    //% blockId="spriteRaycast" block="SpriteRaycast X:$posX y:$posY Angle:$angle Distance:$distance Kind:$kind Minimal Distance:$minDistance"
     //% kind.shadow="spritekind"
     export function spriteRaycast(posX: number, posY: number, angle: number, distance: number, kind: number, minDistance: number): HitResultTileMap {
         let iterCount = 0;

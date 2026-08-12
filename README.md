@@ -2,8 +2,9 @@
 Simple extension that provides math and other utility functions for arcade makecode alongside exposing useful commands to blocks.
 
 ### Whats implemented:
-* **PI** – Allows you to retrieve the value of pi without manually typing it in.
+* ~~**PI** – Allows you to retrieve the value of pi without manually typing it in.~~
 * **Distance Calculator** – Allows you to calculate the distance between two positions.
+* **Manhattan Distance Calculator** - Calculates the distance between two positions in a grid.
 * **Angle Calculator** – Allows you to calculate the angle between two positions.
 * **Radians** – Converts a given angle to radians.
 * **Degrees** – Converts the given radians back into degrees.
@@ -14,6 +15,9 @@ Simple extension that provides math and other utility functions for arcade makec
 * **Show Stats** – Makes helpful stats be avaible when using blocks.
 * **Show Debug** – Makes the debug view that shows hitboxes and more avaible when using blocks.
 * **Shoot Laser** – Creates a line of sprites towards an angle intended to be used as a laser.
+* **Basic Tilemap** - Pathfinding Supply start location and target location and get a list of moves. TileMap only.
+* **Time Delay MS** - Milliseconds Delay tracking object.
+* **Sprite Raycast** - Used to project raycast to detect whether sprites within the path. Only effects sprites ignores tilempas.
 
 So now i don't have to keep writing all these commands manually each time lol.
 
