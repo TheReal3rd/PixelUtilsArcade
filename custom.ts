@@ -207,17 +207,17 @@ namespace PixelUtils {
      * Returns whether elapsedTimeMS amount has passed.
      */
     //% block
-    //% blockId="hasTimePassedMS" block="Create TimeDelayMS Object:$timeObject MS:$elapsedTimeMS"
+    //% blockId="hasTimePassedMS" block="HasPassed TimeDelayMS Object:$timeObject MS:$elapsedTimeMS"
     export function hasTimePassedMS(timeObject: TimeDelayMS, elapsedTimeMS: number): boolean {
         return timeObject.passedMS(elapsedTimeMS);
     }
 
 
     /**
-     * Reset the time object to start remeasuring time duration from the beginning.
+     * Reset the time object to start measuring time duration from the beginning.
      */
     //% block
-    //% blockId="resetTime" block="Create TimeDelayMS Object:$timeObject"
+    //% blockId="resetTime" block="Reset TimeDelayMS Object:$timeObject"
     export function resetTime(timeObject: TimeDelayMS): void {
         return timeObject.reset();
     }
