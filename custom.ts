@@ -134,7 +134,6 @@ class TimeDelayMS {
         }
         return false
     }
-
 }
 
 /**
@@ -281,7 +280,7 @@ namespace PixelUtils {
     //% block
     //% blockId="toDegrees" block="ToDegrees $radians"
     export function toDegrees(radians: number): number {
-        return radians * 57.29577951308232;
+        return radians * (180.0 / Math.PI);
     }
 
     /**
@@ -405,6 +404,15 @@ namespace PixelUtils {
     }
 
     /**
+     * Checks if a tilemap is loaded or not.
+     */
+    //% block
+    //% blockId="isTilemapPresent" block="Returns True or False if a tilemap is loaded."
+    export function isTilemapPresent(): boolean {
+        return game.currentScene().tileMap == null || game.currentScene().tileMap.enabled;
+    }
+
+    /**
      * TileMap Raycast returns results on information of what was hit.
      * @param Column the column position for projection.
      * @param Row the row position for projection.
@@ -416,7 +424,11 @@ namespace PixelUtils {
     //% blockId="tileMapRaycast" block="TileRaycast Column:$col Row:$row Angle:$angle Distance:$distance Kind:$kind"
     //% kind.shadow="spritekind"
     export function tileMapRaycast(col: number, row: number, angle: number, distance: number, kind: number): HitResultTileMap {
-        //TODO in the future add a check to see if a tileMap is active or not.
+        if (!isTilemapPresent()) {
+            console.error("No tilemap present.");
+            return new HitResultTileMap(0, 0, HitTypeEnum.MISS);
+        }
+
         let iterCount = 0;// To prevent runaway code. Tilemap size limit is 255x255 so 65025 + (10 for little extra room).
         let currentX = col;
         let currentY = row;
@@ -478,7 +490,7 @@ namespace PixelUtils {
             step++;
 
             if (iterCount >= distance + 10) {
-                console.log("Warning raycast reached iteration limit. This could effect performance.");
+                console.warn("Warning raycast reached iteration limit. This could effect performance.");
             }
 
             if (kind == -1) {
@@ -536,6 +548,10 @@ namespace PixelUtils {
      * Out-of-bounds tiles are treated as blocked (MakeCode reports them as walls).
      */
     function isTileWalkable(col: number, row: number): boolean {
+        if (!!isTilemapPresent()) {
+            console.error("No tilemap present.");
+            return false;
+        }
         return !tiles.tileAtLocationIsWall(tiles.getTileLocation(col, row));
     }
 
@@ -551,6 +567,10 @@ namespace PixelUtils {
         fromPosition: number[],
         toPosition: number[]
     ): number[][] {
+        if (!isTilemapPresent()) {
+            console.error("No tilemap present.");
+            return [];
+        }
         let startX = fromPosition[0];
         let startY = fromPosition[1];
         let targetX = toPosition[0];
