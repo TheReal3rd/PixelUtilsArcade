@@ -3,7 +3,7 @@ Simple extension that provides math and other utility functions for arcade makec
 
 ### Whats implemented:
 * ~~**PI** – Allows you to retrieve the value of pi without manually typing it in.~~
-* **Distance Calculator** – Allows you to calculate the distance between two positions.
+* **Euclidean Distance Calculator** – Allows you to calculate the distance between two positions.
 * **Manhattan Distance Calculator** - Calculates the distance between two positions in a grid.
 * **Angle Calculator** – Allows you to calculate the angle between two positions.
 * **Radians** – Converts a given angle to radians.
@@ -12,13 +12,13 @@ Simple extension that provides math and other utility functions for arcade makec
 * **RaycastTileMap** – Raycasts in a direction to retrieve tile map data, such as whether a wall or sprite is within the area.
 * **Velocity** – Calculates the velocity for a position using the provided speed and angle.
 * **Angle Position** – Returns the new position based on a given angle, distance, and starting position.
-* **Show Stats** – Makes helpful stats be avaible when using blocks.
-* **Show Debug** – Makes the debug view that shows hitboxes and more avaible when using blocks.
+* **Show Stats** – Makes helpful stats be available when using blocks.
+* **Show Debug** – Makes the debug view that shows hitboxes and more available when using blocks.
 * **Shoot Laser** – Creates a line of sprites towards an angle intended to be used as a laser.
-* **Basic Tilemap** - Pathfinding Supply start location and target location and get a list of moves. TileMap only.
+* **Basic Tilemap Pathfinding** - Pathfinding Supply start location and target location and get a list of moves. TileMap only.
 * **Time Delay MS** - Milliseconds Delay tracking object.
 * **Sprite Raycast** - Used to project raycast to detect whether sprites within the path. Only effects sprites ignores tilempas.
-
+* **Is Tilemap Present** - Used to check if a tilemap is loaded or not.
 So now i don't have to keep writing all these commands manually each time lol.
 
 ## Use as Extension
