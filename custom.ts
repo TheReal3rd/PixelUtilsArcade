@@ -304,7 +304,7 @@ namespace PixelUtils {
      */
     //% block
     //% blockId="toPercentage" block="ToPercentage Value:$value Min Value:$minValue Max Value:$maxValue"
-    export function roPercentage(value: number, minValue: number, maxValue: number): number {
+    export function toPercentage(value: number, minValue: number, maxValue: number): number {
         return (value - minValue) / (maxValue - minValue) * 100.0
     }
 
