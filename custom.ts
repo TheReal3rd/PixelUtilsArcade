@@ -711,4 +711,83 @@ namespace PixelUtils {
         image.setPalette(workingPallet);
     }
 
+    //% block
+    //% blockId="imageDrawLine" block="Bresenham Draw Line Image:$image X:$posX Y:$posY toX:$posX1 toY:$posY1 Colour:$colour"
+    export function imageDrawLine(image: Image, posX: number, posY: number, posX1: number, posY1: number, colour: number): Image {
+        //Bresenham's line algorithm
+        //https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+        let dx = Math.abs(posX1 - posX);
+        let dy = Math.abs(posY1 - posY);
+        let x = posX;
+        let y = posY;
+
+        let sx = posX > posX1 ? -1 : 1;
+        let sy = posY > posY1 ? -1 : 1;
+        
+        if (dx > dy){
+            let err = dx / 2.0;
+            while (x != posX1) {
+                image.setPixel(x, y, colour);
+                err -= dy;
+                if(err < 0) {
+                    y += sy;
+                    err += dx;
+                }
+                x += sx;
+            }
+        } else {
+            let err = dy / 2.0;
+            while (y != posY1) {
+                image.setPixel(x, y, colour);
+                err -= dx;
+                if (err < 0) {
+                    x += sx;
+                    err += dy;
+                }
+                y += sy;
+            }
+        }
+        image.setPixel(x,y, colour);
+        return image;
+    }
+
+    //% block
+    //% blockId="imageDrawCircleMidpoint" block="Midpoint Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircleMidpoint(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
+        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+        let x = radius;
+        let y = 0;
+        let decision = 1 - radius;
+        while(x >= y) {
+            image.setPixel(posX + x, posY + y, colour); // Octant 1
+            image.setPixel(posX + y, posY + x, colour); // Octant 2
+            image.setPixel(posX - y, posY + x, colour); // Octant 3
+            image.setPixel(posX - x, posY + y, colour); // Octant 4
+            image.setPixel(posX - x, posY - y, colour); // Octant 5
+            image.setPixel(posX - y, posY - x, colour); // Octant 6
+            image.setPixel(posX + y, posY - x, colour); // Octant 7
+            image.setPixel(posX + x, posY - y, colour); // Octant 8
+            y++;
+            if (decision <= 0) {
+                decision += 2 * y + 1;
+            } else {
+                x--;
+                decision += 2 * (y - x) + 1;
+            }
+        }
+        return image;
+    }
+
+
+    //% block
+    //% blockId="imageDrawCircle" block="Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircle(image: Image, posX: number, posY: number, radius: number, colour: number) : Image {
+        //Parametric circle drawing / Parametric equation of a circle
+        for(let angle = 0; angle != 360; angle+=1) {
+            let pixelPos = calcAngularPosition(posX, posY, angle, radius)
+            image.setPixel(pixelPos[0], pixelPos[1], colour)
+        }
+        return image
+    }
+
 }
