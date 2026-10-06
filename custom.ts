@@ -681,6 +681,9 @@ namespace PixelUtils {
     }
 
     //Colour pallet switching...
+    /**
+     * Reset the colour pallete back to default options.
+     */
     //% block
     //% blockId="resetColourPallet" block="Reset Colour Pallet"
     export function resetColourPallet() {
@@ -688,6 +691,13 @@ namespace PixelUtils {
         image.setPalette(workingPallet);
     }
 
+    /**
+     * Changes a selected colour pallet index to a new provided colour values.
+     * @params index from 1-20 the colour index within the colour pallet.
+     * @params red colour value within RGB range 0-255.
+     * @params green colour value within RGB range 0-255.
+     * @params blue colour value within RGB range 0-255.
+     */
     //% block
     //% blockId="setColourIndex" block="Set Colour Index:$index Red:$red  Green:$green  Blue:$blue "
     export function setColourIndex(index: number, red: number, green: number, blue: number) {
@@ -711,6 +721,15 @@ namespace PixelUtils {
         image.setPalette(workingPallet);
     }
 
+    /**
+     * Brensenham's line draw within a provided image.
+     * @params image the image to draw the line upon.
+     * @params posX X position within image space to draw from.
+     * @params posY Y position within image space to draw from.
+     * @params posX1 X position within image space to draw to.
+     * @params posY1 Y position within image space to draw to.
+     * @params colour the colour index from the colour pallet from range 0-20.
+     */
     //% block
     //% blockId="imageDrawLine" block="Bresenham Draw Line Image:$image X:$posX Y:$posY toX:$posX1 toY:$posY1 Colour:$colour"
     export function imageDrawLine(image: Image, posX: number, posY: number, posX1: number, posY1: number, colour: number): Image {
@@ -751,6 +770,14 @@ namespace PixelUtils {
         return image;
     }
 
+    /**
+     * Midpoint Circle drawing algorithm.
+     * @params image the image to draw the circle upon.
+     * @params posX the center X postions of the circle.
+     * @params posY the center Y position of the circle.
+     * @params radius the circle radius from center.
+     * @params colour the colour index from the pallet with range 0-20.
+     */
     //% block
     //% blockId="imageDrawCircleMidpoint" block="Midpoint Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
     export function imageDrawCircleMidpoint(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
@@ -778,7 +805,51 @@ namespace PixelUtils {
         return image;
     }
 
+    //% block
+    //% blockId="imageDrawCircleMidpointFilled" block="Midpoint Draw Circle Filled Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircleMidpointFilled(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
+        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+        let x = radius;
+        let y = 0;
+        let radiusError = 1 - x;
 
+        while (x >= y) {
+            // Horizontal spans using x as the half-width
+            for (let i = posX - x; i <= posX + x; i++) {
+                image.setPixel(i, posY + y, colour);
+                image.setPixel(i, posY - y, colour);
+            }
+
+            // Horizontal spans using y as the half-width
+            for (let i = posX - y; i <= posX + y; i++) {
+                image.setPixel(i, posY + x, colour);
+                image.setPixel(i, posY - x, colour);
+            }
+
+            y++;
+            if(radiusError < 0) {
+                radiusError += 2 * y + 1;
+            } else {
+                x--;
+                radiusError += 2 * (y - x + 1);
+            }
+        }
+
+        return image;
+    }
+
+
+    //TODO https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm Try this for the lolz.
+
+
+    /**
+     * Parametric circle draw. Using floating point less efficient.
+     * @params image the image to draw the circle upon.
+     * @params posX the center X postions of the circle.
+     * @params posY the center Y position of the circle.
+     * @params radius the circle radius from center.
+     * @params colour the colour index from the pallet with range 0-20.
+     */
     //% block
     //% blockId="imageDrawCircle" block="Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
     export function imageDrawCircle(image: Image, posX: number, posY: number, radius: number, colour: number) : Image {
