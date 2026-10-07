@@ -134,6 +134,10 @@ class TimeDelayMS {
         }
         return false
     }
+
+    toString(): String {
+           return (game.runtime() - this.timerStart).toString();
+    }
 }
 
 /**
