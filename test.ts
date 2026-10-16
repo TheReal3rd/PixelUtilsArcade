@@ -285,14 +285,25 @@ forever(function () {
     }
 })
 
+function testPair() {
+    console.log("Pair Data type test start")
+    let testpair = PixelUtils.createPair(100, 200);
+    console.logValue("first", PixelUtils.getPair(testpair, PairSelection.First));
+    console.logValue("second", PixelUtils.getPair(testpair, PairSelection.Second));
+    console.log("Changing Pair First and Second values...")
+    PixelUtils.setPair(testpair, PairSelection.First, 600);
+    PixelUtils.setPair(testpair, PairSelection.Second, 700);
+    console.logValue("first", PixelUtils.getPair(testpair, PairSelection.First));
+    console.logValue("second", PixelUtils.getPair(testpair, PairSelection.Second));
+    console.log("Pair Data type test ends")
+}
+
 PixelUtils.showStats();
+testPair();
 testDistance();
 testAngle();
 testConverters();
 testVelocity();
 testRaycast();
-//testPallet();
 testPathFinding();
-
-//
-//PixelUtils.showDebug()
+testPallet();

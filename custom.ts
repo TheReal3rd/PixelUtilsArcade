@@ -68,6 +68,45 @@ enum HitResultTileMapInfo {
     HitSprite
 }
 
+//% blockNamespace="PairSelection"
+enum PairSelection {
+    //% block="First"
+    First,
+    //% block="Second"
+    Second,
+}
+
+/**
+ * Pair Tuple like object. To hold two values within one object.
+ * @param first the first value. Which can be any value.
+ * @param second the second value. Which can be any value.
+ */
+class Pair {
+    private first: any;
+    private second: any;
+
+    constructor(first: any, second: any) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public getFirst(): any {
+        return this.first;
+    }
+
+    public getSecond(): any {
+        return this.second;
+    }
+
+    public setFirst(newFirst: any) {
+        this.first = newFirst;
+    }
+
+    public setSecond(newSecond: any) {
+        this.second = newSecond;
+    }
+}
+
 /**
  * Node Object to store scoring, postion and parent information.
  * @param Position tile.
@@ -195,7 +234,191 @@ class HitResultTileMap {
  * Custom blocks
  */
 //% weight=100 color=#990099 icon=""
+namespace GraphicsUtils {
+
+    /**
+     * Brensenham's line draw within a provided image.
+     * @params image the image to draw the line upon.
+     * @params posX X position within image space to draw from.
+     * @params posY Y position within image space to draw from.
+     * @params posX1 X position within image space to draw to.
+     * @params posY1 Y position within image space to draw to.
+     * @params colour the colour index from the colour pallet from range 0-20.
+     */
+    //% block
+    //% blockId="imageDrawLine" block="Bresenham Draw Line Image:$image X:$posX Y:$posY toX:$posX1 toY:$posY1 Colour:$colour"
+    export function imageDrawLine(image: Image, posX: number, posY: number, posX1: number, posY1: number, colour: number): Image {
+        //Bresenham's line algorithm
+        //https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+        let dx = Math.abs(posX1 - posX);
+        let dy = Math.abs(posY1 - posY);
+        let x = posX;
+        let y = posY;
+
+        let sx = posX > posX1 ? -1 : 1;
+        let sy = posY > posY1 ? -1 : 1;
+
+        if (dx > dy) {
+            let err = dx / 2.0;
+            while (x != posX1) {
+                image.setPixel(x, y, colour);
+                err -= dy;
+                if (err < 0) {
+                    y += sy;
+                    err += dx;
+                }
+                x += sx;
+            }
+        } else {
+            let err = dy / 2.0;
+            while (y != posY1) {
+                image.setPixel(x, y, colour);
+                err -= dx;
+                if (err < 0) {
+                    x += sx;
+                    err += dy;
+                }
+                y += sy;
+            }
+        }
+        image.setPixel(x, y, colour);
+        return image;
+    }
+
+    /**
+     * Midpoint Circle drawing algorithm.
+     * @params image the image to draw the circle upon.
+     * @params posX the center X postions of the circle.
+     * @params posY the center Y position of the circle.
+     * @params radius the circle radius from center.
+     * @params colour the colour index from the pallet with range 0-20.
+     */
+    //% block
+    //% blockId="imageDrawCircleMidpoint" block="Midpoint Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircleMidpoint(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
+        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+        let x = radius;
+        let y = 0;
+        let decision = 1 - radius;
+        while (x >= y) {
+            image.setPixel(posX + x, posY + y, colour); // Octant 1
+            image.setPixel(posX + y, posY + x, colour); // Octant 2
+            image.setPixel(posX - y, posY + x, colour); // Octant 3
+            image.setPixel(posX - x, posY + y, colour); // Octant 4
+            image.setPixel(posX - x, posY - y, colour); // Octant 5
+            image.setPixel(posX - y, posY - x, colour); // Octant 6
+            image.setPixel(posX + y, posY - x, colour); // Octant 7
+            image.setPixel(posX + x, posY - y, colour); // Octant 8
+            y++;
+            if (decision <= 0) {
+                decision += 2 * y + 1;
+            } else {
+                x--;
+                decision += 2 * (y - x) + 1;
+            }
+        }
+        return image;
+    }
+
+    //% block
+    //% blockId="imageDrawCircleMidpointFilled" block="Midpoint Draw Circle Filled Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircleMidpointFilled(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
+        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+        let x = radius;
+        let y = 0;
+        let radiusError = 1 - x;
+
+        while (x >= y) {
+            // Horizontal spans using x as the half-width
+            for (let i = posX - x; i <= posX + x; i++) {
+                image.setPixel(i, posY + y, colour);
+                image.setPixel(i, posY - y, colour);
+            }
+
+            // Horizontal spans using y as the half-width
+            for (let i = posX - y; i <= posX + y; i++) {
+                image.setPixel(i, posY + x, colour);
+                image.setPixel(i, posY - x, colour);
+            }
+
+            y++;
+            if (radiusError < 0) {
+                radiusError += 2 * y + 1;
+            } else {
+                x--;
+                radiusError += 2 * (y - x + 1);
+            }
+        }
+
+        return image;
+    }
+
+
+    //TODO https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm Try this for the lolz.
+
+
+    /**
+     * Parametric circle draw. Using floating point less efficient.
+     * @params image the image to draw the circle upon.
+     * @params posX the center X postions of the circle.
+     * @params posY the center Y position of the circle.
+     * @params radius the circle radius from center.
+     * @params colour the colour index from the pallet with range 0-20.
+     */
+    //% block
+    //% blockId="imageDrawCircle" block="Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
+    export function imageDrawCircle(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
+        //Parametric circle drawing / Parametric equation of a circle
+        for (let angle = 0; angle != 360; angle += 1) {
+            let pixelPos = PixelUtils.calcAngularPosition(posX, posY, angle, radius)
+            image.setPixel(pixelPos[0], pixelPos[1], colour)
+        }
+        return image
+    }
+}
+
+/**
+ * Custom blocks
+ */
+//% weight=100 color=#990099 icon=""
 namespace PixelUtils {
+
+    /**
+     * Creates and returns a Pair object.
+     */
+    //% block
+    //% blockId="createPair" block="Create Pair First:$first Second:$second"
+    export function createPair(first: any = null, second: any = null): Pair {
+        return new Pair(first, second);
+    }
+
+    /**
+     * Returns Pair value within either first or second.
+     */
+    //% block
+    //% blockId="getPair" block="Get Pair PairObject:$pairObject Selection:$selection"
+    export function getPair(pairObject: Pair, selection: PairSelection): any {
+        switch(selection) {
+            case PairSelection.First:
+                return pairObject.getFirst();
+            default:
+                return pairObject.getSecond();
+        } 
+    }
+
+    /**
+     * Sets a value within a Pair either first or second.
+     */
+    //% block
+    //% blockId="setPair" block="Set Pair PairObject:$pairObject Selection:$selection Value:$newValue"
+    export function setPair(pairObject: Pair, selection: PairSelection, newValue: any): void {
+        switch (selection) {
+            case PairSelection.First:
+                return pairObject.setFirst(newValue);
+            default:
+                return pairObject.setSecond(newValue);
+        }
+    }
 
     /**
      * Creates and returns a TimeDelayMS object.
@@ -725,144 +948,29 @@ namespace PixelUtils {
         image.setPalette(workingPallet);
     }
 
-    /**
-     * Brensenham's line draw within a provided image.
-     * @params image the image to draw the line upon.
-     * @params posX X position within image space to draw from.
-     * @params posY Y position within image space to draw from.
-     * @params posX1 X position within image space to draw to.
-     * @params posY1 Y position within image space to draw to.
-     * @params colour the colour index from the colour pallet from range 0-20.
-     */
     //% block
-    //% blockId="imageDrawLine" block="Bresenham Draw Line Image:$image X:$posX Y:$posY toX:$posX1 toY:$posY1 Colour:$colour"
-    export function imageDrawLine(image: Image, posX: number, posY: number, posX1: number, posY1: number, colour: number): Image {
-        //Bresenham's line algorithm
-        //https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
-        let dx = Math.abs(posX1 - posX);
-        let dy = Math.abs(posY1 - posY);
-        let x = posX;
-        let y = posY;
+    //% blockId="guiPositionCalculator" block="World To Screen Position TargetSprite:$targetSprite PlayerSprite:$playerSprite"
+    export function guiPositionCalculator(targetSprite:Sprite, playerSprite: Sprite) : Array<number> {
+        /* X_range = 80
+    # Y_range = 60
+    # tile_size = 16
+    # map_size = ? (200)
+    # tile_size * map_size - (X_range or Y_range)
+    # So no real point making it dynamic as you can't. (So i made it dynamic. :D)
+        return [clamp(80, (16 * levelSizes[levelID][0]) - 80, playerOne.x) - (scene.screen_width() - textSprite.width) / 2,
+        clamp(60, (16 * levelSizes[levelID][1]) - 60, playerOne.y) - (scene.screen_height() - textSprite.height) / 2]
+        */
+        //tileMapWidth = 
 
-        let sx = posX > posX1 ? -1 : 1;
-        let sy = posY > posY1 ? -1 : 1;
-        
-        if (dx > dy){
-            let err = dx / 2.0;
-            while (x != posX1) {
-                image.setPixel(x, y, colour);
-                err -= dy;
-                if(err < 0) {
-                    y += sy;
-                    err += dx;
-                }
-                x += sx;
-            }
-        } else {
-            let err = dy / 2.0;
-            while (y != posY1) {
-                image.setPixel(x, y, colour);
-                err -= dx;
-                if (err < 0) {
-                    x += sx;
-                    err += dy;
-                }
-                y += sy;
-            }
-        }
-        image.setPixel(x,y, colour);
-        return image;
+        const tilemap = game.currentScene().tileMap;
+        const width = tilemap.areaHeight() >> tilemap.scale
+        const height = tilemap.areaWidth() >> tilemap.scale
+        console.log(scene.cameraProperty(CameraProperty.X))
+        return [
+            clamp(80, (16 * width) - 80, playerSprite.x) - (scene.screenWidth() - targetSprite.width) / 2,
+            clamp(60, (16 * height) - 60, playerSprite.y) - (scene.screenHeight() - targetSprite.height) / 2
+        ]
     }
 
-    /**
-     * Midpoint Circle drawing algorithm.
-     * @params image the image to draw the circle upon.
-     * @params posX the center X postions of the circle.
-     * @params posY the center Y position of the circle.
-     * @params radius the circle radius from center.
-     * @params colour the colour index from the pallet with range 0-20.
-     */
-    //% block
-    //% blockId="imageDrawCircleMidpoint" block="Midpoint Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
-    export function imageDrawCircleMidpoint(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
-        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-        let x = radius;
-        let y = 0;
-        let decision = 1 - radius;
-        while(x >= y) {
-            image.setPixel(posX + x, posY + y, colour); // Octant 1
-            image.setPixel(posX + y, posY + x, colour); // Octant 2
-            image.setPixel(posX - y, posY + x, colour); // Octant 3
-            image.setPixel(posX - x, posY + y, colour); // Octant 4
-            image.setPixel(posX - x, posY - y, colour); // Octant 5
-            image.setPixel(posX - y, posY - x, colour); // Octant 6
-            image.setPixel(posX + y, posY - x, colour); // Octant 7
-            image.setPixel(posX + x, posY - y, colour); // Octant 8
-            y++;
-            if (decision <= 0) {
-                decision += 2 * y + 1;
-            } else {
-                x--;
-                decision += 2 * (y - x) + 1;
-            }
-        }
-        return image;
-    }
-
-    //% block
-    //% blockId="imageDrawCircleMidpointFilled" block="Midpoint Draw Circle Filled Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
-    export function imageDrawCircleMidpointFilled(image: Image, posX: number, posY: number, radius: number, colour: number): Image {
-        //https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-        let x = radius;
-        let y = 0;
-        let radiusError = 1 - x;
-
-        while (x >= y) {
-            // Horizontal spans using x as the half-width
-            for (let i = posX - x; i <= posX + x; i++) {
-                image.setPixel(i, posY + y, colour);
-                image.setPixel(i, posY - y, colour);
-            }
-
-            // Horizontal spans using y as the half-width
-            for (let i = posX - y; i <= posX + y; i++) {
-                image.setPixel(i, posY + x, colour);
-                image.setPixel(i, posY - x, colour);
-            }
-
-            y++;
-            if(radiusError < 0) {
-                radiusError += 2 * y + 1;
-            } else {
-                x--;
-                radiusError += 2 * (y - x + 1);
-            }
-        }
-
-        return image;
-    }
-
-
-    //TODO https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm Try this for the lolz.
-
-
-    /**
-     * Parametric circle draw. Using floating point less efficient.
-     * @params image the image to draw the circle upon.
-     * @params posX the center X postions of the circle.
-     * @params posY the center Y position of the circle.
-     * @params radius the circle radius from center.
-     * @params colour the colour index from the pallet with range 0-20.
-     */
-    //% block
-    //% blockId="imageDrawCircle" block="Draw Circle Image:$image X:$posX Y:$posY Radius:$radius Colour:$colour"
-    export function imageDrawCircle(image: Image, posX: number, posY: number, radius: number, colour: number) : Image {
-        //Parametric circle drawing / Parametric equation of a circle
-        for(let angle = 0; angle != 360; angle+=1) {
-            let pixelPos = calcAngularPosition(posX, posY, angle, radius)
-            image.setPixel(pixelPos[0], pixelPos[1], colour)
-        }
-        return image
-    }
 
 }
