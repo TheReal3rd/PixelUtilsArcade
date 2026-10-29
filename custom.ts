@@ -375,6 +375,56 @@ namespace GraphicsUtils {
         }
         return image
     }
+
+    // Tried recursion flood fill but fails possibly due to stack overfill. Then crashes the console.
+    // So Iterative fill is the one.
+    /**
+     * Iterative image flood fill using a stack.
+     * @param image The target image to colour fill.
+     * @param posX The starting X position.
+     * @param posY The starting Y position.
+     * @param newColour The new colour index (0-20).
+     */
+    //% block
+    //% blockId="floodFill" block="Flood Fill Image:$image X:$posX Y:$posY Colour:$newColour"
+    export function floodFill(image: Image, posX: number, posY: number, newColour: number): Image {
+        // recursion flood fill https://www.geeksforgeeks.org/dsa/flood-fill-algorithm/
+        // Check that the starting position is valid
+        if (posX < 0 || posX >= image.width || posY < 0 || posY >= image.height) {
+            return image;
+        }
+
+        const oldColour = image.getPixel(posX, posY);
+        if (oldColour == newColour) {
+            return image;
+        }
+
+        let stack: number[][] = [];
+        stack.push([posX, posY]);
+
+        while (stack.length > 0) {
+            // Take the next pixel from the stack
+            let pos = stack.pop();
+            let x = pos[0];
+            let y = pos[1];
+
+            if (x < 0 || x >= image.width || y < 0 || y >= image.height) {
+                continue;
+            }
+
+            if (image.getPixel(x, y) != oldColour) {
+                continue;
+            }
+
+            image.setPixel(x, y, newColour);
+            stack.push([x + 1, y]);
+            stack.push([x - 1, y]);
+            stack.push([x, y + 1]);
+            stack.push([x, y - 1]);
+        }
+
+        return image;
+    }
 }
 
 /**
@@ -397,7 +447,7 @@ namespace PixelUtils {
      */
     //% block
     //% blockId="getPair" block="Get Pair PairObject:$pairObject Selection:$selection"
-    export function getPair(pairObject: Pair, selection: PairSelection): any {
+    export function getPair(pairObject: Pair, selection: PairSelection) {
         switch(selection) {
             case PairSelection.First:
                 return pairObject.getFirst();
@@ -948,6 +998,7 @@ namespace PixelUtils {
         image.setPalette(workingPallet);
     }
 
+    //TODO THIS!!!
     //% block
     //% blockId="guiPositionCalculator" block="World To Screen Position TargetSprite:$targetSprite PlayerSprite:$playerSprite"
     export function guiPositionCalculator(targetSprite:Sprite, playerSprite: Sprite) : Array<number> {
